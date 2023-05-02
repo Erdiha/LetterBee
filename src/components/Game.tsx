@@ -1,343 +1,233 @@
-import React, { useState, useRef, useEffect, RefObject } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  StyleSheet,
-  ToastAndroid,
-  TouchableOpacity,
-} from 'react-native';
-import { colors } from '../../assets/colors';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
 import { words } from './data';
-import Animated, {
-  SlideInDown,
-  SlideInLeft,
-  SlideInUp,
-  SlideOutRight,
-} from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
-import RenderGuesses from './RenderGuesses';
-import { KeyboardAccessoryView } from 'react-native-keyboard-accessory';
+import { colors } from '../../assets/colors';
 import Keyboard from './Keyboard';
-import { CustomTextInput } from 'react-native-custom-keyboard';
+import { IPlayer } from '../screens/types';
+import Animated, {
+  SlideInLeft,
+  FlipInEasyX,
+  FlipInEasyY,
+} from 'react-native-reanimated';
+import ModalComponent from './ModalComponent';
 
-const Wordle = (props: any) => {
+const Game = ({ player, setPlayer }) => {
   const validWords = words;
-  const [word, setWord] = useState('');
-  const [attempts, setAttempts] = useState(0);
+  const [allGuesses, setAllGuesses] = useState<Array<Array<string>>>([]);
   const [secretWord, setSecretWord]: any = useState([]);
-  const [guess, setGuess] = useState('');
-  const [guesses, setGuesses] = useState([]);
-  const [feedback, setFeedback] = useState('');
-  const [inputTiles, setInputTiles] = useState(['', '', '', '', '']);
-  const [inputTilesArray, setInputTilesArray] = useState<Array<Array<string>>>(
-    [],
-  );
   const [gameOver, setGameOver] = useState(false);
-  const [score, setScore] = useState(0);
-  const inputRefs = useRef([]);
+  const correctpos = useRef(0);
+  const [guess, setGuess] = useState(['', '', '', '', '']);
+  const [row, setRow] = useState(0);
+  const [col, setCol] = useState(0);
+  const [foundTheWord, setFoundTheWord] = useState(false);
 
-  //creates a random word from the words array when mounted
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * validWords.length);
     setSecretWord(validWords[randomIndex].split(''));
   }, []);
 
   useEffect(() => {
-    ToastAndroid.showWithGravity(
-      feedback,
-      ToastAndroid.SHORT,
-      ToastAndroid.TOP,
-    );
-    ToastAndroid.show(feedback, ToastAndroid.SHORT);
-  }, [feedback]);
-
-  //handles the ref changes
-  useEffect(() => {
-    if (gameOver) return;
-    inputRefs.current = inputRefs?.current?.slice(0, inputTiles.length);
-    if (inputRefs.current.length > 0) {
-      inputRefs.current[0]?.focus();
+    if (correctpos.current === 5) {
+      console.log('win');
+      setGameOver(true);
+      correctpos.current = 0;
     }
-  }, [inputTiles]);
+  }, [correctpos.current, correctpos]);
 
-  const checkGuess = () => {
-    // Check if the guessed word is valid and has five letters
-    if (!guess.trim()) {
-      setFeedback('Please enter a valid guess.');
-      return;
-    }
-    // Check if the guessed word is valid and has five letters
-    if (validWords.includes(guess) && guess.length === 5) {
-      // Count the number of correct letters and correct positions
-      let correctLetters = 0;
-      let correctPositions = 0;
-      for (let i = 0; i < 5; i++) {
-        if (guess[i] === secretWord[i]) {
-          correctPositions++;
-        } else if (secretWord.includes(guess[i])) {
-          correctLetters++;
-        }
-      }
-      // Update the feedback message
-      if (correctPositions === 5) {
-        setFeedback('You win!');
-        setGameOver(true);
-      } else {
-        setFeedback(
-          `Correct letters: ${correctLetters}, correct positions: ${correctPositions}`,
-        );
-      }
-    } else {
-      setFeedback('Invalid guess, try again.');
-    }
-    // Add the guess to the array of guesses
-    setGuesses([...guesses, guess]);
-    // Add the input tiles for this guess to the array of input tiles
-    setInputTilesArray([...inputTilesArray, inputTiles]);
-    // Clear the guess input field
-    setGuess('');
-    // Clear the input tiles for the next guess
-    setInputTiles(['', '', '', '', '']);
-    setAttempts(attempts + 1);
-  };
-
-  function renderGuesses({ row }) {
-    const boxes = [];
-    let greenCount = 0;
-    for (let i = 0; i < 5; i++) {
-      console.log('row', row);
-      let color = '';
-      if (row.length > i) {
-        console.log('row in length', row, secretWord);
-        const letter = row[i].toLowerCase();
-        if (letter === secretWord[i]) {
-          console.log('colors.green', colors.green);
-          color = colors.green;
-          greenCount++;
-        } else if (secretWord.includes(letter)) {
-          console.log('colors.yellow', colors.yellow);
-          color = colors.yellow;
-        } else {
-          color = colors.gray;
-        }
-      }
-
-      boxes.push(
-        <Animated.View
-          entering={SlideInLeft}
-          exiting={SlideOutRight}
-          key={i}
-          style={[styles.secretWordBox, { backgroundColor: color }]}>
-          <Text style={styles.secretWordLetter}>{row[i].toUpperCase()}</Text>
-        </Animated.View>,
-      );
-    }
-    return <View style={styles.guessRow}>{boxes}</View>;
-  }
-
-  const resetGame = () => {
-    // Select a new secret word and reset the state variables
+  const newWord = () => {
     const randomIndex = Math.floor(Math.random() * validWords.length);
     setSecretWord(validWords[randomIndex].split(''));
-    setGuess('');
-    setGuesses([]);
-    setFeedback('');
-    setInputTiles(['', '', '', '', '']);
-    setInputTilesArray([]);
-    setAttempts(0);
-    setGameOver(false);
   };
 
-  const handleTextChange = (text: string, index: number) => {
-    const newInputTiles = [...inputTiles];
-    if (text) {
-      newInputTiles[index] = text[text.length - 1];
-    }
-    setInputTiles(newInputTiles);
-    setGuess(newInputTiles.join(''));
+  const renderGuesses = () => {
+    return (
+      <View style={styles.guessedWordsContainer}>
+        {gameOver ? (
+          <View>
+            <Text>
+              {player.score} {secretWord}
+            </Text>
+          </View>
+        ) : (
+          allGuesses.map((row, rowIndex) => {
+            correctpos.current = 0; // set correctpos to zero for each row
+            return (
+              <Animated.View
+                entering={SlideInLeft}
+                key={rowIndex}
+                style={[styles.guessRow, { backgroundColor: colors.light }]}>
+                {row.map((letter, cellIndex) => {
+                  const color = checkWin({ letter, cellIndex });
 
-    if (text.length === 1) {
-      if (index < inputTiles.length - 1) {
-        setTimeout(() => {
-          inputRefs.current.length <= 5 &&
-            inputRefs.current[index + 1]?.focus();
-        }, 0.1);
-      } else if (newInputTiles.length >= 4) {
-        inputRefs.current[index]?.blur();
+                  const cellStyle = {
+                    ...styles.guessCell,
+                    backgroundColor: color,
+                  };
+
+                  if (correctpos.current === 5) {
+                    handleScore();
+                  }
+                  console.log('correct pos', correctpos.current);
+                  return (
+                    <Animated.View
+                      entering={FlipInEasyX.delay(300 * cellIndex)}
+                      key={cellIndex}
+                      style={cellStyle}>
+                      <Text style={styles.letter}>{letter}</Text>
+                    </Animated.View>
+                  );
+                })}
+              </Animated.View>
+            );
+          })
+        )}
+      </View>
+    );
+  };
+
+  const onPress = (letter: string) => {
+    console.log('letter', letter, guess);
+    if (letter === 'ENTER') {
+      if (guess.includes('')) {
+        return;
+      }
+      setAllGuesses([...allGuesses, guess]);
+      setGuess(['', '', '', '', '']);
+      setRow(0);
+    } else if (letter === 'backspace') {
+      if (row === 0) {
+        return;
+      }
+      if (row > 0) {
+        guess[row - 1] = '';
+        setGuess(guess);
+        setRow(row - 1);
+      } else {
+        // If we're at the beginning of the row, delete the last letter
+        const lastRow = allGuesses[col].slice(0, -1);
+        setAllGuesses([...allGuesses.slice(0, -1), lastRow]);
+        setRow(4);
+      }
+    } else {
+      if (row === 5) {
+        return;
+      } else {
+        guess[row] = letter;
+        setGuess(guess);
+        setRow(row + 1);
       }
     }
   };
 
-  // Render the row of boxes representing the player's guesses
+  const resetGame = () => {
+    setAllGuesses([]);
+    setGuess(['', '', '', '', '']);
+    setCol(0);
+    setRow(0);
+    setGameOver(false);
+    newWord();
+    setFoundTheWord(false);
+  };
 
-  console.log('game over', gameOver);
+  const checkWin = ({ letter, cellIndex }) => {
+    const matchingIndexes = [];
+    for (let i = 0; i < secretWord.length; i++) {
+      if (secretWord[i].toLowerCase() === letter.toLowerCase()) {
+        matchingIndexes.push(i);
+      }
+    }
+    if (matchingIndexes.includes(cellIndex)) {
+      correctpos.current += 1;
+      return colors.green;
+    } else if (matchingIndexes.length > 0) {
+      return colors.yellow;
+    } else {
+      return colors.gray;
+    }
+  };
+  const handleScore = () => {
+    setGameOver(true);
+    setFoundTheWord(true);
+    setGuess(allGuesses[allGuesses.length - 1]);
+  };
+
   return (
-    <View
-      style={{
-        position: 'relative',
-        flex: 1,
-        backgroundColor: colors.light,
-        width: '100%',
-        justifyContent: 'space-evenly',
-        alignItems: 'center',
-      }}>
-      <View style={{ position: 'absolute', top: 10, right: 10 }}>
-        <Ionicons name='md-help-circle' size={32} color='black' />
-      </View>
+    <View style={styles.gameWrapper}>
+      <Text style={styles.headerText}>
+        {player.name} {player.score} {secretWord}
+      </Text>
 
-      <View
-        style={{
-          display: 'flex',
-          position: 'absolute',
-          top: 10,
-          left: 10,
-          borderColor: colors.lightDark,
-          borderWidth: 1,
-          borderRadius: 5,
-          padding: 5,
-        }}>
-        <Text
-          style={{
-            color: colors.lightDark,
-            fontSize: 20,
-            fontWeight: 'bold',
-          }}>
-          {props?.player?.name.toUpperCase()}
-        </Text>
-      </View>
-      {gameOver ? (
-        <View
-          style={{
-            display: 'flex',
-            backgroundColor: 'gray',
-            margin: 20,
-            padding: 10,
-            justifyContent: 'center',
-            alignItems: 'center',
-            flex: 1 / 3,
-          }}>
-          <Text
-            style={{
-              display: 'flex',
-              color: colors.lightDark,
-            }}>
-            YOU WIN on the {`${attempts}`} attempt
-          </Text>
-          <TouchableOpacity
-            style={{
-              display: 'flex',
-              backgroundColor: colors.green,
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: 10,
-              margin: 10,
-              marginTop: 20,
-            }}
-            onPress={() => setGameOver(false)}>
-            <Text>NEXT ROUND</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={{ display: 'flex' }}>
-          <Text style={styles.headers}>
-            {attempts < 5
-              ? 'Guess the secret word (5 letters):'
-              : 'secret word is:'}
-          </Text>
-
-          <View style={styles.secretWordRow}>
-            {secretWord.map((letter: string, index: number) => (
-              <View key={index} style={styles.secretWordBox}>
-                <Text style={styles.secretWordLetter}>
-                  {letter?.toUpperCase()}
-                </Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={styles.inputRow}>
-            {inputTiles.map((value: string, index: number) => (
-              <TextInput
-                ref={(ref: any) => (inputRefs.current[index] = ref)}
-                key={index}
-                style={styles.inputBox}
-                maxLength={1}
-                editable={attempts < 5 || gameOver}
-                autoCapitalize={'characters'}
-                onChangeText={(text: any) => handleTextChange(text, index)}
-                value={value?.toUpperCase()}
-                keyboardAppearance='dark'
-                keyboardType='default'
-              />
-            ))}
-          </View>
-
-          <View style={styles.buttonRow}>
-            <Button
-              color={colors.green}
-              title={'Guess'}
-              onPress={() => checkGuess()}
-            />
-            <Button color='red' title={'Reset'} onPress={() => resetGame()} />
-          </View>
-        </View>
-      )}
-      <View
-        style={{
-          borderColor: colors.lightDark,
-          borderWidth: 1,
-          paddingVertical: 2,
-        }}>
-        {inputTilesArray.length > 0 ? (
-          inputTilesArray.map((row, rowIndex) => {
-            return (
-              <View
-                style={{
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  flexDirection: 'row',
-                }}
-                key={rowIndex}>
-                {renderGuesses({ row })}
-              </View>
-            );
-          })
-        ) : (
-          <Text
-            style={{
-              alignSelf: 'center',
-              fontSize: 20,
-              fontWeight: 'bold',
-              color: colors.lightDark,
-            }}>
-            NO GUESSES YET
-          </Text>
+      {/* guess row tiles */}
+      <View style={styles.guessRow}>
+        {guess?.map((letter, index) =>
+          foundTheWord ? (
+            <Animated.View
+              entering={FlipInEasyX.damping(0.5).delay(300 * index)}
+              key={index}
+              style={[
+                styles.guessCell,
+                {
+                  backgroundColor: foundTheWord
+                    ? colors.green
+                    : colors.lightDark,
+                },
+              ]}>
+              <Text style={styles.letter}>{letter.toUpperCase()}</Text>
+            </Animated.View>
+          ) : (
+            <View
+              key={index}
+              style={[
+                styles.guessCell,
+                {
+                  backgroundColor: foundTheWord
+                    ? colors.green
+                    : colors.lightDark,
+                },
+              ]}>
+              <Text style={styles.letter}>{letter.toUpperCase()}</Text>
+            </View>
+          ),
         )}
       </View>
 
-      <View style={styles.attemptsRow}>
-        <Text style={styles.attemptsText}>{`Attempts: ${attempts}`}</Text>
-      </View>
-      <View style={{ position: 'absolute', bottom: 0, width: '100%' }}>
-        <Keyboard onPress={handleTextChange} />
+      <TouchableOpacity
+        onPress={() => resetGame()}
+        style={styles.controlContainer}>
+        <Text
+          style={{
+            fontSize: 20,
+            alignSelf: 'center',
+            borderWidth: 2,
+            borderColor: colors.yellow,
+            padding: 10,
+          }}>
+          START OVER
+        </Text>
+      </TouchableOpacity>
+
+      {/*  tiles rows with guessed words */}
+
+      {gameOver ? (
+        <ModalComponent gameOver={gameOver} setGameOver={setGameOver} />
+      ) : (
+        renderGuesses()
+      )}
+
+      {/* keyboard */}
+      <View style={styles.keyboardContainer}>
+        <Keyboard onPress={onPress} />
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  headers: {
-    padding: 10,
-    fontSize: 18,
+  secretWordLetter: {
+    fontSize: 15,
     fontWeight: 'bold',
-  },
-  secretWordRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 15,
+    color: colors.light,
   },
   secretWordBox: {
     width: 30,
@@ -349,70 +239,59 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     color: colors.light,
   },
-  secretWordLetter: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: colors.light,
+  gameWrapper: {
+    alignSelf: 'stretch',
+    backgroundColor: colors.light,
+    flex: 1,
+    gap: 5,
   },
-  inputRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  inputBox: {
-    width: 40,
-    height: 40,
-    borderWidth: 1,
-    borderColor: colors.dark,
-    marginHorizontal: 5,
-    borderRadius: 5,
+  headerText: {
+    fontSize: 30,
+    fontFamily: 'Roboto',
+    color: colors.lightDark,
     textAlign: 'center',
-    fontSize: 20,
-    fontWeight: 'bold',
+    padding: 10,
+    backgroundColor: colors.yellow,
+    margin: 10,
   },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    marginVertical: 10,
-    gap: 20,
-    marginTop: 20,
-  },
-  feedbackRow: {
-    flexDirection: 'row',
+  controlContainer: {
+    flex: 1 / 5,
+
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 10,
   },
-  feedbackText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: colors.light,
+  guessedWordsContainer: {
+    flex: 1,
+    backgroundColor: colors.light,
+    margin: 10,
+  },
+  keyboardContainer: {
+    flex: 3 / 4,
+
+    alignSelf: 'stretch',
+    width: '100%',
   },
   guessRow: {
+    flex: 1 / 5,
+    backgroundColor: colors.lightDark,
     flexDirection: 'row',
+    display: 'flex',
+  },
+
+  guessCell: {
+    alignSelf: 'stretch',
+    borderWidth: 2,
+    borderColor: colors.light,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 8,
   },
-  box: {
-    width: 20,
-    height: 20,
-    marginHorizontal: 5,
-    borderRadius: 5,
-  },
-  attemptsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  attemptsText: {
-    fontSize: 16,
+  letter: {
+    color: colors.light,
+    fontSize: 30,
+    fontFamily: 'Roboto',
     fontWeight: 'bold',
-    color: colors.lightDark,
   },
 });
 
-export default Wordle;
+export default Game;

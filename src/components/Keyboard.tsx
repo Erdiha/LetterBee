@@ -30,6 +30,14 @@ const Keyboard = ({ onPress, green, yellow, gray }: any) => {
     return colors.light;
   };
 
+  const handlePress = (letter: any) => {
+    if (letter === backspace) {
+      onPress('backspace');
+    } else {
+      onPress(letter);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {keyRows.map((row, rowIndex) => (
@@ -44,7 +52,7 @@ const Keyboard = ({ onPress, green, yellow, gray }: any) => {
                   { backgroundColor: keyColors(letter) },
                 ]}
                 key={letterIndex}
-                onPress={() => onPress(letter)}>
+                onPress={() => handlePress(letter)}>
                 {letter === 'ENTER' ? enterJSX : restJSX(letter)}
               </TouchableOpacity>
             </Animated.View>

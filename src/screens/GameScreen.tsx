@@ -25,7 +25,12 @@ interface IPlayer {
   score: number;
 }
 
-function GameScreen({ navigation }: { navigation: GameScreenNavigationProp }) {
+interface GameScreenProps {
+  navigation: GameScreenNavigationProp;
+  updatePlayer: (updatedPlayer: IPlayer) => void;
+}
+
+function GameScreen() {
   const [singlePlayer, setSinglePlayer] = React.useState(false);
   const [player, setPlayer] = React.useState<IPlayer>({ name: '', score: 0 });
   const [start, setStart] = React.useState(0);
@@ -77,13 +82,7 @@ function GameScreen({ navigation }: { navigation: GameScreenNavigationProp }) {
       ) : start === 1 ? (
         renderInputName()
       ) : (
-        <Game
-          navigation={navigation}
-          player={player}
-          setPlayer={setPlayer}
-          setStart={setStart}
-          start={start}
-        />
+        <Game player={player} setPlayer={setPlayer} />
       )}
     </Animated.View>
   );
@@ -92,6 +91,14 @@ function GameScreen({ navigation }: { navigation: GameScreenNavigationProp }) {
 //////////////////styles and export //////////////////////
 
 export default GameScreen;
+
+// <Game
+// navigation={navigation}
+// player={player}
+// setPlayer={setPlayer}
+// setStart={setStart}
+// start={start}
+// />
 
 const styles = StyleSheet.create({
   inputWrapper: { flex: 1, justifyContent: 'center', alignItems: 'center' },
