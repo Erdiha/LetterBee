@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ToastAndroid } from 'react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { words } from './data';
 import { colors } from '../../assets/colors';
@@ -8,10 +8,17 @@ import Animated, {
   SlideInLeft,
   FlipInEasyX,
   FlipInEasyY,
+  SlideOutLeft,
+  RollInRight,
+  ZoomInUp,
 } from 'react-native-reanimated';
 import ModalComponent from './ModalComponent';
-
-const Game = ({ player, setPlayer }) => {
+import { AntDesign } from '@expo/vector-icons';
+import Prompter from './Prompter';
+import UserAvatar from './UserAvatar';
+import { CheckKeyColor, checkWord } from './Helper';
+import { EvilIcons } from '@expo/vector-icons';
+const Game = ({ player, setPlayer, navigation }) => {
   const validWords = words;
   const [allGuesses, setAllGuesses] = useState<Array<Array<string>>>([]);
   const [secretWord, setSecretWord]: any = useState([]);
@@ -21,6 +28,16 @@ const Game = ({ player, setPlayer }) => {
   const [row, setRow] = useState(0);
   const [col, setCol] = useState(0);
   const [foundTheWord, setFoundTheWord] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const roundCount = useRef(0);
+  const [showInfo, setShowInfo] = useState(false);
+  const [info, setInfo] = useState('');
+
+  const keyBoardColors = {
+    '#F7DB6A': [],
+    '#7AA874': [],
+    '#B7B7B7': [],
+  };
 
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * validWords.length);
@@ -28,50 +45,115 @@ const Game = ({ player, setPlayer }) => {
   }, []);
 
   useEffect(() => {
-    if (correctpos.current === 5) {
-      console.log('win');
-      setGameOver(true);
-      correctpos.current = 0;
+    if (foundTheWord) {
+      handleScore();
     }
-  }, [correctpos.current, correctpos]);
+    if (attempt === 5) {
+      handleScore();
+      if (!foundTheWord) {
+        ToastAndroid.show('You lost', ToastAndroid.SHORT);
+        setShowInfo(true);
+        setInfo('lost');
+      } else {
+        ToastAndroid.show('You WIN!!!', ToastAndroid.SHORT);
+      }
+    }
+  }, [attempt, gameOver, foundTheWord]);
+
+  const handleScore = () => {
+    if (foundTheWord) {
+      player.score += 1;
+      setPlayer(player);
+      setAttempt(0);
+    }
+
+    roundCount.current += 1;
+    setGameOver(true);
+  };
 
   const newWord = () => {
     const randomIndex = Math.floor(Math.random() * validWords.length);
     setSecretWord(validWords[randomIndex].split(''));
   };
 
+  const proptUser = () => {
+    return (
+      <Prompter
+        attempt={attempt}
+        roundCount={roundCount}
+        player={player}
+        type={info}
+        handleNewGame={handleNewGame}
+        resetGame={resetGame}
+        secretWord={secretWord}
+      />
+    );
+  };
+
+  const resetGame = () => {
+    setAllGuesses([]);
+    setGuess(['', '', '', '', '']);
+    setCol(0);
+    setRow(0);
+    setGameOver(false);
+    newWord();
+    setFoundTheWord(false);
+    setAttempt(0);
+    setShowInfo(false);
+  };
+
   const renderGuesses = () => {
     return (
       <View style={styles.guessedWordsContainer}>
-        {gameOver ? (
-          <View>
-            <Text>
-              {player.score} {secretWord}
-            </Text>
-          </View>
+        {foundTheWord && gameOver ? (
+          <ModalComponent
+            secretWord={secretWord}
+            gameOver={gameOver}
+            setGameOver={setGameOver}
+            player={player}
+            roundCount={roundCount}
+            resetGame={resetGame}
+          />
         ) : (
           allGuesses.map((row, rowIndex) => {
             correctpos.current = 0; // set correctpos to zero for each row
+
             return (
               <Animated.View
                 entering={SlideInLeft}
+                exiting={SlideOutLeft}
                 key={rowIndex}
                 style={[styles.guessRow, { backgroundColor: colors.light }]}>
                 {row.map((letter, cellIndex) => {
-                  const color = checkWin({ letter, cellIndex });
+                  const { key, color } = CheckKeyColor({
+                    letter,
+                    cellIndex,
+                    secretWord,
+                    correctpos,
+                  });
+
+                  keyBoardColors[color].push(key);
 
                   const cellStyle = {
                     ...styles.guessCell,
-                    backgroundColor: color,
+                    backgroundColor: letter === '' ? 'red' : color,
+                    bordercolor: colors.lightDark,
+                    borderwidth: 2,
                   };
 
                   if (correctpos.current === 5) {
+                    setGuess(allGuesses[allGuesses.length - 1]);
+                    setFoundTheWord(true);
                     handleScore();
                   }
-                  console.log('correct pos', correctpos.current);
                   return (
                     <Animated.View
-                      entering={FlipInEasyX.delay(300 * cellIndex)}
+                      entering={
+                        letter === ''
+                          ? ZoomInUp.delay(300 * cellIndex)
+                          : FlipInEasyX.delay(300 * cellIndex)
+                      }
+                      exiting={FlipInEasyY.delay(300 * cellIndex)}
                       key={cellIndex}
                       style={cellStyle}>
                       <Text style={styles.letter}>{letter}</Text>
@@ -87,12 +169,22 @@ const Game = ({ player, setPlayer }) => {
   };
 
   const onPress = (letter: string) => {
-    console.log('letter', letter, guess);
     if (letter === 'ENTER') {
       if (guess.includes('')) {
         return;
       }
-      setAllGuesses([...allGuesses, guess]);
+      setAttempt(attempt + 1);
+      console.log('guess in on press', guess);
+
+      checkWord({ row: guess }).then((result) => {
+        console.log('result', result);
+        if (result) {
+          setAllGuesses([...allGuesses, guess]);
+        } else {
+          ToastAndroid.show('INVALID WORD!!!', ToastAndroid.SHORT);
+          setAllGuesses([...allGuesses, ['', '', '', '', '']]);
+        }
+      });
       setGuess(['', '', '', '', '']);
       setRow(0);
     } else if (letter === 'backspace') {
@@ -120,44 +212,47 @@ const Game = ({ player, setPlayer }) => {
     }
   };
 
-  const resetGame = () => {
-    setAllGuesses([]);
-    setGuess(['', '', '', '', '']);
-    setCol(0);
-    setRow(0);
-    setGameOver(false);
-    newWord();
-    setFoundTheWord(false);
-  };
-
-  const checkWin = ({ letter, cellIndex }) => {
-    const matchingIndexes = [];
-    for (let i = 0; i < secretWord.length; i++) {
-      if (secretWord[i].toLowerCase() === letter.toLowerCase()) {
-        matchingIndexes.push(i);
-      }
-    }
-    if (matchingIndexes.includes(cellIndex)) {
-      correctpos.current += 1;
-      return colors.green;
-    } else if (matchingIndexes.length > 0) {
-      return colors.yellow;
-    } else {
-      return colors.gray;
-    }
-  };
-  const handleScore = () => {
-    setGameOver(true);
-    setFoundTheWord(true);
-    setGuess(allGuesses[allGuesses.length - 1]);
+  const handleNewGame = () => {
+    resetGame();
+    player.score = 0;
+    setPlayer(player);
+    navigation.navigate('Home');
   };
 
   return (
     <View style={styles.gameWrapper}>
-      <Text style={styles.headerText}>
-        {player.name} {player.score} {secretWord}
-      </Text>
-
+      <View
+        style={{
+          width: '100%',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-evenly',
+          display: 'flex',
+          position: 'relative',
+        }}>
+        <Text style={styles.headerText}>{secretWord}</Text>
+        <View
+          style={{
+            alignSelf: 'center',
+            position: 'absolute',
+            right: 10,
+            borderRadius: 50,
+            backgroundColor: colors.lightDark,
+            borderWidth: 5,
+          }}>
+          <AntDesign
+            size={35}
+            name='infocirlce'
+            color={colors.light}
+            style={{ fontWeight: 'bold' }}
+            onPress={() => {
+              setInfo('info');
+              setShowInfo(!showInfo);
+            }}
+          />
+        </View>
+        <UserAvatar player={player} />
+      </View>
       {/* guess row tiles */}
       <View style={styles.guessRow}>
         {guess?.map((letter, index) =>
@@ -192,53 +287,27 @@ const Game = ({ player, setPlayer }) => {
         )}
       </View>
 
-      <TouchableOpacity
-        onPress={() => resetGame()}
-        style={styles.controlContainer}>
-        <Text
-          style={{
-            fontSize: 20,
-            alignSelf: 'center',
-            borderWidth: 2,
-            borderColor: colors.yellow,
-            padding: 10,
-          }}>
-          START OVER
-        </Text>
-      </TouchableOpacity>
+      {/*  buttons  */}
 
       {/*  tiles rows with guessed words */}
 
-      {gameOver ? (
-        <ModalComponent gameOver={gameOver} setGameOver={setGameOver} />
-      ) : (
-        renderGuesses()
-      )}
+      {renderGuesses()}
 
       {/* keyboard */}
       <View style={styles.keyboardContainer}>
-        <Keyboard onPress={onPress} />
+        <Keyboard
+          onPress={onPress}
+          foundTheWord={foundTheWord}
+          gameOver={gameOver}
+          keyboardColors={keyBoardColors}
+        />
       </View>
+      {showInfo && proptUser()}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  secretWordLetter: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: colors.light,
-  },
-  secretWordBox: {
-    width: 30,
-    height: 30,
-    backgroundColor: colors.lightDark,
-    marginHorizontal: 3,
-    borderRadius: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
-    color: colors.light,
-  },
   gameWrapper: {
     alignSelf: 'stretch',
     backgroundColor: colors.light,
@@ -254,12 +323,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.yellow,
     margin: 10,
   },
-  controlContainer: {
-    flex: 1 / 5,
 
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   guessedWordsContainer: {
     flex: 1,
     backgroundColor: colors.light,
@@ -273,7 +337,7 @@ const styles = StyleSheet.create({
   },
   guessRow: {
     flex: 1 / 5,
-    backgroundColor: colors.lightDark,
+    backgroundColor: colors.light,
     flexDirection: 'row',
     display: 'flex',
   },
@@ -281,10 +345,11 @@ const styles = StyleSheet.create({
   guessCell: {
     alignSelf: 'stretch',
     borderWidth: 2,
-    borderColor: colors.light,
+
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    margin: 1,
   },
   letter: {
     color: colors.light,

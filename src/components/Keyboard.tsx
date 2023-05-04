@@ -4,33 +4,34 @@ import {
   TouchableOpacity,
   Text,
   StyleSheet,
-  TouchableWithoutFeedback,
+  Vibration,
 } from 'react-native';
 import { colors } from '../../assets/colors';
-import { Ionicons } from '@expo/vector-icons';
-import Animated, { FlipInEasyX } from 'react-native-reanimated';
 import { keyRows, backspace, enter } from './constants';
+import Animated, { BounceIn } from 'react-native-reanimated';
 
-const Keyboard = ({ onPress, green, yellow, gray }: any) => {
+const Keyboard = ({ onPress, foundTheWord, keyboardColors, gameOver }: any) => {
   const enterJSX = <Text style={styles.enter}>ENTER</Text>;
+
   const restJSX = (letter: string | any) => (
     <Text style={styles.text}>{letter}</Text>
   );
 
   const keyColors = (key: any) => {
-    if (green?.includes(key)) {
+    if (keyboardColors['#7AA874']?.includes(key)) {
       return colors.green;
     }
-    if (yellow?.includes(key)) {
+    if (keyboardColors['#F7DB6A']?.includes(key)) {
       return colors.yellow;
     }
-    if (gray?.includes(key)) {
-      return colors.lightDark;
+    if (keyboardColors['#B7B7B7']?.includes(key)) {
+      return colors.gray;
     }
     return colors.light;
   };
 
   const handlePress = (letter: any) => {
+    Vibration.vibrate(40);
     if (letter === backspace) {
       onPress('backspace');
     } else {
@@ -43,8 +44,12 @@ const Keyboard = ({ onPress, green, yellow, gray }: any) => {
       {keyRows.map((row, rowIndex) => (
         <View style={styles.row} key={rowIndex}>
           {row.map((letter, letterIndex) => (
-            <Animated.View key={letterIndex}>
+            <Animated.View
+              entering={BounceIn.delay(letterIndex * 200)}
+              key={letterIndex}>
               <TouchableOpacity
+                activeOpacity={0.3}
+                disabled={foundTheWord || gameOver}
                 style={[
                   styles.button,
                   letter === backspace && styles.backspace,
@@ -78,12 +83,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFEFEF',
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 3,
+    margin: 2,
     width: 33,
     height: 60,
-    borderRadius: 4,
+    borderRadius: 3,
     borderColor: colors.lightDark,
-    borderWidth: 1,
+    borderWidth: 0.2,
+    elevation: 5,
   },
   text: {
     fontSize: 30,

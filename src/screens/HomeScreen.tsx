@@ -23,12 +23,6 @@ import { RootStackParamList } from './types';
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
 function HomeScreen({ navigation }: { navigation: HomeScreenNavigationProp }) {
-  const [animationTriggered, setAnimationTriggered] = useState(false);
-
-  useEffect(() => {
-    setAnimationTriggered(true);
-  }, []);
-
   const renderTitle = () => {
     const title = ['K', 'O', 'O', 'R', 'D', 'L', 'E'];
     const bgColor = [
