@@ -106,13 +106,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.lightDark,
     width: 78,
     height: 60,
+    borderColor: colors.lightDark,
+    borderWidth: 1,
+    elevation: 6,
   },
   enter: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 22,
+
     textAlign: 'center',
     textAlignVertical: 'center',
-    color: colors.lightDark,
+    color: colors.red,
+    letterSpacing: 1,
+    fontWeight: '900',
+    fontFamily: 'sans-serif-condensed',
   },
 });
 

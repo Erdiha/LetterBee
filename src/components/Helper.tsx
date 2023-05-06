@@ -23,7 +23,6 @@ export const CheckKeyColor = ({
 };
 const validateGuess = async ({ row }) => {
   const w = row.join('').toLowerCase();
-  console.log('we are in async', w);
   let data = null;
   try {
     const response = await fetch(
@@ -39,7 +38,7 @@ const validateGuess = async ({ row }) => {
 
 export const checkWord = async ({ row }) => {
   const data = await validateGuess({ row });
-  console.log('data issss', data);
+
   if (data?.title === 'No Definitions Found') {
     return false;
   } else {

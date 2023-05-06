@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors } from '../../assets/colors';
 import React from 'react';
 import Animated, { SlideInUp, SlideOutDown } from 'react-native-reanimated';
+import { AntDesign } from '@expo/vector-icons';
 
 const Prompter = ({
   attempt,
@@ -11,6 +12,7 @@ const Prompter = ({
   resetGame,
   handleNewGame,
   secretWord,
+  setShowInfo,
 }) => {
   const info = [];
   if (type === 'lost') {
@@ -55,6 +57,22 @@ const Prompter = ({
       style={styles.infoButton}
       entering={SlideInUp}
       exiting={SlideOutDown}>
+      <View
+        style={{
+          position: 'absolute',
+          backgroundColor: colors.lightDark,
+          top: -10,
+          right: -10,
+          borderColor: colors.red,
+          borderWidth: 3,
+          borderRadius: 50,
+          zIndex: 1000,
+          elevation: 10,
+        }}>
+        <TouchableOpacity onPress={() => setShowInfo((prev: boolean) => !prev)}>
+          <AntDesign color={colors.light} size={35} name='closecircleo' />
+        </TouchableOpacity>
+      </View>
       <View style={styles.scoreWrapper}>
         <Text>{info[0]}</Text>
       </View>

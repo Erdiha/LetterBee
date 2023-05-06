@@ -9,70 +9,66 @@ import {
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { colors } from '../../assets/colors';
-import { Ionicons } from '@expo/vector-icons';
-import Animated, {
-  BounceInUp,
-  PinwheelIn,
+import Animation, {
+  BounceInLeft,
+  BounceInRight,
   SlideInDown,
   SlideInLeft,
   SlideInRight,
-  color,
+  SlideOutDown,
 } from 'react-native-reanimated';
 import { RootStackParamList } from './types';
-
+import { title, bgColor, enter } from '../components/constants';
+import Animated from 'react-native-reanimated';
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
 function HomeScreen({ navigation }: { navigation: HomeScreenNavigationProp }) {
-  const renderTitle = () => {
-    const title = ['K', 'O', 'O', 'R', 'D', 'L', 'E'];
-    const bgColor = [
-      'red',
-      'blue',
-      'green',
-      'magenta',
-      'orange',
-      'purple',
-      'teal',
-    ];
-    const red = title.map((letter, index) => {
+  useEffect(() => {
+    renderTitle;
+  }, []);
+  function renderTitle() {
+    const red = title.map((letter: string, index: number) => {
       return (
-        <Animated.View
-          style={{
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: bgColor[index],
-            margin: 2,
-            borderRadius: 5,
-            padding: 3,
-            width: 100,
-          }}
-          key={index}
-          exiting={
-            index % 2 === 1
-              ? SlideInLeft.delay(200 * index)
-              : SlideInRight.delay(200 * index)
-          }
+        <Animation.View
           entering={
             index % 2 === 0
-              ? SlideInLeft.delay(200 * index)
-              : SlideInRight.delay(200 * index)
-          }>
-          <Text style={{ color: 'white', fontSize: 40, fontWeight: '900' }}>
+              ? BounceInRight.delay(index * 300).duration(3000)
+              : BounceInLeft.delay(index * 300).duration(3000)
+          }
+          style={[
+            {
+              position: 'absolute',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              backgroundColor: bgColor[index],
+              margin: 2,
+              borderRadius: 5,
+              padding: 3,
+              width: 100,
+              elevation: 5,
+              top: 120,
+              zIndex: title.length - index,
+              bottom: (title.length - index) * 55,
+            },
+          ]}
+          key={index}>
+          <Text
+            style={{ color: colors.light, fontSize: 45, fontWeight: 'bold' }}>
             {letter}
           </Text>
-        </Animated.View>
+        </Animation.View>
       );
     });
 
     return red;
-  };
-
+  }
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor={colors.lightDark} />
       <View style={styles.container}>{renderTitle()}</View>
       <Animated.View
-        entering={SlideInDown.delay(1500).duration(1000)}
+        entering={SlideInDown.duration(1300)}
+        exiting={BounceInLeft}
         style={{ flex: 1 }}>
         <TouchableOpacity
           onPress={() => {

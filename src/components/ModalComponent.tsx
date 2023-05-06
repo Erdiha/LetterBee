@@ -18,7 +18,6 @@ import { colors } from '../../assets/colors';
 
 function ModalComponent({
   gameOver,
-  setGameOver,
   secretWord,
   player,
   roundCount,

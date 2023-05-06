@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInput,
+  ToastAndroid,
 } from 'react-native';
 import { RootStackParamList } from './types';
 import Animated, {
@@ -35,6 +36,21 @@ function GameScreen({ navigation }) {
   const [player, setPlayer] = React.useState<IPlayer>({ name: '', score: 0 });
   const [start, setStart] = React.useState(0);
 
+  const handlePlayerName = (text: string) => {
+    // Regular expression to match only letters or a letter followed by numbers
+    const regex = /^[a-zA-Z][a-zA-Z0-9]*$/;
+
+    if (text === '' || regex.test(text)) {
+      // If the text matches the regular expression, it's a valid input
+      setPlayer({ ...player, name: text });
+      console.log('Valid input:', text);
+    } else {
+      // If the text doesn't match the regular expression, it's an invalid input
+      ToastAndroid.show('Invalid input', ToastAndroid.SHORT);
+      console.log('Invalid input:', text);
+    }
+  };
+
   const chooseGameType = () => {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -59,7 +75,7 @@ function GameScreen({ navigation }) {
           style={styles.input}
           placeholder='Name'
           value={player.name}
-          onChangeText={(text) => setPlayer({ ...player, name: text })}
+          onChangeText={(text) => handlePlayerName(text)}
         />
         <TouchableOpacity onPress={() => setStart(2)} style={styles.buttons}>
           <Text style={styles.buttonText}>START</Text>

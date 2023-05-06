@@ -11,6 +11,7 @@ import Animated, {
   SlideOutLeft,
   RollInRight,
   ZoomInUp,
+  SlideOutRight,
 } from 'react-native-reanimated';
 import ModalComponent from './ModalComponent';
 import { AntDesign } from '@expo/vector-icons';
@@ -32,6 +33,7 @@ const Game = ({ player, setPlayer, navigation }) => {
   const roundCount = useRef(0);
   const [showInfo, setShowInfo] = useState(false);
   const [info, setInfo] = useState('');
+  const MAX_ROUND = 5;
 
   const keyBoardColors = {
     '#F7DB6A': [],
@@ -45,30 +47,47 @@ const Game = ({ player, setPlayer, navigation }) => {
   }, []);
 
   useEffect(() => {
-    if (foundTheWord) {
-      handleScore();
-    }
-    if (attempt === 5) {
-      handleScore();
-      if (!foundTheWord) {
-        ToastAndroid.show('You lost', ToastAndroid.SHORT);
-        setShowInfo(true);
-        setInfo('lost');
-      } else {
-        ToastAndroid.show('You WIN!!!', ToastAndroid.SHORT);
-      }
-    }
-  }, [attempt, gameOver, foundTheWord]);
+    !gameOver && handleScore();
+  }, [allGuesses]);
 
   const handleScore = () => {
+    console.log('player score', player?.score);
+    console.log('handleScore', attempt, foundTheWord);
+
+    if (!player || player.score == null) {
+      console.error('Player or score is null or undefined');
+      return;
+    }
+
+    if (typeof foundTheWord !== 'boolean') {
+      console.error('foundTheWord is not a boolean value');
+      return;
+    }
+
+    if (attempt < 0 || attempt > 5) {
+      console.error('Attempt value is out of range');
+      return;
+    }
+
     if (foundTheWord) {
       player.score += 1;
       setPlayer(player);
       setAttempt(0);
-    }
 
-    roundCount.current += 1;
-    setGameOver(true);
+      roundCount.current += 1;
+
+      setGameOver(true);
+    } else if (attempt === 5) {
+      roundCount.current += 1;
+
+      if (!foundTheWord) {
+        ToastAndroid.show('You lost', ToastAndroid.SHORT);
+        setShowInfo(true);
+        setInfo('lost');
+      }
+
+      setGameOver(true);
+    }
   };
 
   const newWord = () => {
@@ -86,6 +105,7 @@ const Game = ({ player, setPlayer, navigation }) => {
         handleNewGame={handleNewGame}
         resetGame={resetGame}
         secretWord={secretWord}
+        setShowInfo={setShowInfo}
       />
     );
   };
@@ -109,7 +129,6 @@ const Game = ({ player, setPlayer, navigation }) => {
           <ModalComponent
             secretWord={secretWord}
             gameOver={gameOver}
-            setGameOver={setGameOver}
             player={player}
             roundCount={roundCount}
             resetGame={resetGame}
@@ -136,20 +155,20 @@ const Game = ({ player, setPlayer, navigation }) => {
 
                   const cellStyle = {
                     ...styles.guessCell,
-                    backgroundColor: letter === '' ? 'red' : color,
+                    backgroundColor: letter === '?' ? 'red' : color,
                     bordercolor: colors.lightDark,
                     borderwidth: 2,
                   };
-
                   if (correctpos.current === 5) {
-                    setGuess(allGuesses[allGuesses.length - 1]);
                     setFoundTheWord(true);
+                    setGuess(allGuesses[allGuesses.length - 1]);
                     handleScore();
                   }
+
                   return (
                     <Animated.View
                       entering={
-                        letter === ''
+                        letter === '?'
                           ? ZoomInUp.delay(300 * cellIndex)
                           : FlipInEasyX.delay(300 * cellIndex)
                       }
@@ -173,18 +192,19 @@ const Game = ({ player, setPlayer, navigation }) => {
       if (guess.includes('')) {
         return;
       }
-      setAttempt(attempt + 1);
-      console.log('guess in on press', guess);
 
+      setAttempt(attempt + 1);
+      console.log('in enter', attempt);
       checkWord({ row: guess }).then((result) => {
-        console.log('result', result);
         if (result) {
           setAllGuesses([...allGuesses, guess]);
         } else {
           ToastAndroid.show('INVALID WORD!!!', ToastAndroid.SHORT);
-          setAllGuesses([...allGuesses, ['', '', '', '', '']]);
+          setAllGuesses([...allGuesses, ['?', '?', '?', '?', '?']]);
         }
       });
+
+      handleScore();
       setGuess(['', '', '', '', '']);
       setRow(0);
     } else if (letter === 'backspace') {
@@ -215,8 +235,10 @@ const Game = ({ player, setPlayer, navigation }) => {
   const handleNewGame = () => {
     resetGame();
     player.score = 0;
+    player.name = '';
     setPlayer(player);
     navigation.navigate('Home');
+    roundCount.current = 0;
   };
 
   return (
@@ -263,9 +285,7 @@ const Game = ({ player, setPlayer, navigation }) => {
               style={[
                 styles.guessCell,
                 {
-                  backgroundColor: foundTheWord
-                    ? colors.green
-                    : colors.lightDark,
+                  backgroundColor: foundTheWord ? colors.green : colors.light,
                 },
               ]}>
               <Text style={styles.letter}>{letter.toUpperCase()}</Text>
@@ -345,7 +365,6 @@ const styles = StyleSheet.create({
   guessCell: {
     alignSelf: 'stretch',
     borderWidth: 2,
-
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
