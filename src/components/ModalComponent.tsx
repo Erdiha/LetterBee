@@ -1,17 +1,6 @@
 import React, { useState } from 'react';
-import {
-  Button,
-  Text,
-  TouchableOpacity,
-  View,
-  StyleSheet,
-  Modal,
-} from 'react-native';
-import Animated, {
-  BounceInUp,
-  BounceOutDown,
-  SlideInDown,
-} from 'react-native-reanimated';
+import { Text, TouchableOpacity, View, StyleSheet, Modal } from 'react-native';
+import Animated, { BounceInUp } from 'react-native-reanimated';
 
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { colors } from '../../assets/colors';
@@ -19,13 +8,13 @@ import { colors } from '../../assets/colors';
 function ModalComponent({
   gameOver,
   secretWord,
-  player,
+  playerScore,
   roundCount,
   resetGame,
 }) {
   const [isModalVisible, setModalVisible] = useState(gameOver);
   const word = secretWord.join('').toUpperCase();
-  console.log('player', player);
+  console.log('player', playerScore);
   return (
     <View style={styles.centeredView}>
       <Modal transparent={true} animationType='slide' visible={isModalVisible}>
@@ -44,7 +33,7 @@ function ModalComponent({
                   height: 60,
                   fontSize: 50,
                 }}>
-                CONRATS!!!
+                CONGRATS!!!
               </Text>
             </Animated.View>
             <View style={{ flexDirection: 'row' }}>
@@ -75,7 +64,7 @@ function ModalComponent({
                 Score:
               </Text>
               <Text style={styles.scoreText}>
-                {player.score}/{roundCount.current}
+                {playerScore.current}/{roundCount.current}
               </Text>
             </View>
           </View>

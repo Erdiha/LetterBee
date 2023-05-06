@@ -18,13 +18,13 @@ const Keyboard = ({ onPress, foundTheWord, keyboardColors, gameOver }: any) => {
   );
 
   const keyColors = (key: any) => {
-    if (keyboardColors['#7AA874']?.includes(key)) {
+    if (keyboardColors[colors.green]?.includes(key)) {
       return colors.green;
     }
-    if (keyboardColors['#F7DB6A']?.includes(key)) {
+    if (keyboardColors[colors.yellow]?.includes(key)) {
       return colors.yellow;
     }
-    if (keyboardColors['#B7B7B7']?.includes(key)) {
+    if (keyboardColors[colors.gray]?.includes(key)) {
       return colors.gray;
     }
     return colors.light;

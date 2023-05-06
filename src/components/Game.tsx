@@ -3,7 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { words } from './data';
 import { colors } from '../../assets/colors';
 import Keyboard from './Keyboard';
-import { IPlayer } from '../screens/types';
+import useScore from './useScore';
+
 import Animated, {
   SlideInLeft,
   FlipInEasyX,
@@ -12,13 +13,19 @@ import Animated, {
   RollInRight,
   ZoomInUp,
   SlideOutRight,
+  BounceIn,
+  BounceInLeft,
+  BounceInRight,
+  BounceInUp,
 } from 'react-native-reanimated';
 import ModalComponent from './ModalComponent';
 import { AntDesign } from '@expo/vector-icons';
 import Prompter from './Prompter';
 import UserAvatar from './UserAvatar';
-import { CheckKeyColor, checkWord } from './Helper';
-import { EvilIcons } from '@expo/vector-icons';
+import { CheckKeyColor, checkWord, handleScore } from './Helper';
+const TOTAL_SCORE = 150;
+const MAX_ROUND = 3;
+
 const Game = ({ player, setPlayer, navigation }) => {
   const validWords = words;
   const [allGuesses, setAllGuesses] = useState<Array<Array<string>>>([]);
@@ -33,12 +40,13 @@ const Game = ({ player, setPlayer, navigation }) => {
   const roundCount = useRef(0);
   const [showInfo, setShowInfo] = useState(false);
   const [info, setInfo] = useState('');
-  const MAX_ROUND = 5;
+
+  const playerScore = useRef(player.score);
 
   const keyBoardColors = {
-    '#F7DB6A': [],
-    '#7AA874': [],
-    '#B7B7B7': [],
+    [colors.yellow]: [],
+    [colors.green]: [],
+    [colors.gray]: [],
   };
 
   useEffect(() => {
@@ -51,9 +59,6 @@ const Game = ({ player, setPlayer, navigation }) => {
   }, [allGuesses]);
 
   const handleScore = () => {
-    console.log('player score', player?.score);
-    console.log('handleScore', attempt, foundTheWord);
-
     if (!player || player.score == null) {
       console.error('Player or score is null or undefined');
       return;
@@ -70,8 +75,7 @@ const Game = ({ player, setPlayer, navigation }) => {
     }
 
     if (foundTheWord) {
-      player.score += 1;
-      setPlayer(player);
+      playerScore.current += 1;
       setAttempt(0);
 
       roundCount.current += 1;
@@ -129,7 +133,7 @@ const Game = ({ player, setPlayer, navigation }) => {
           <ModalComponent
             secretWord={secretWord}
             gameOver={gameOver}
-            player={player}
+            playerScore={playerScore}
             roundCount={roundCount}
             resetGame={resetGame}
           />
@@ -194,7 +198,7 @@ const Game = ({ player, setPlayer, navigation }) => {
       }
 
       setAttempt(attempt + 1);
-      console.log('in enter', attempt);
+
       checkWord({ row: guess }).then((result) => {
         if (result) {
           setAllGuesses([...allGuesses, guess]);
@@ -240,6 +244,11 @@ const Game = ({ player, setPlayer, navigation }) => {
     navigation.navigate('Home');
     roundCount.current = 0;
   };
+  const handleScoreDisplay = () => {
+    const newScore = useScore({ secretWord, attempt, allGuesses });
+    console.log(newScore);
+    return TOTAL_SCORE - newScore;
+  };
 
   return (
     <View style={styles.gameWrapper}>
@@ -252,7 +261,9 @@ const Game = ({ player, setPlayer, navigation }) => {
           display: 'flex',
           position: 'relative',
         }}>
-        <Text style={styles.headerText}>{secretWord}</Text>
+        <Text style={styles.headerText}>
+          {handleScoreDisplay()}/{TOTAL_SCORE}
+        </Text>
         <View
           style={{
             alignSelf: 'center',
@@ -287,29 +298,30 @@ const Game = ({ player, setPlayer, navigation }) => {
                 {
                   backgroundColor: foundTheWord ? colors.green : colors.light,
                 },
+                {},
               ]}>
               <Text style={styles.letter}>{letter.toUpperCase()}</Text>
             </Animated.View>
           ) : (
-            <View
+            <Animated.View
+              entering={BounceIn.delay(300 * index)}
               key={index}
               style={[
                 styles.guessCell,
                 {
-                  backgroundColor: foundTheWord
-                    ? colors.green
-                    : colors.lightDark,
+                  backgroundColor: foundTheWord ? colors.green : colors.light,
                 },
+                {
+                  transform: [{ scale: row === index ? 1.1 : 0.9 }],
+                },
+
+                { borderColor: row === index ? colors.red : colors.lightDark },
               ]}>
               <Text style={styles.letter}>{letter.toUpperCase()}</Text>
-            </View>
+            </Animated.View>
           ),
         )}
       </View>
-
-      {/*  buttons  */}
-
-      {/*  tiles rows with guessed words */}
 
       {renderGuesses()}
 
@@ -340,14 +352,16 @@ const styles = StyleSheet.create({
     color: colors.lightDark,
     textAlign: 'center',
     padding: 10,
-    backgroundColor: colors.yellow,
+    backgroundColor: colors.light,
     margin: 10,
+    borderWidth: 0.5,
+    borderColor: colors.lightDark,
   },
 
   guessedWordsContainer: {
     flex: 1,
     backgroundColor: colors.light,
-    margin: 10,
+    margin: 20,
   },
   keyboardContainer: {
     flex: 3 / 4,
@@ -360,6 +374,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.light,
     flexDirection: 'row',
     display: 'flex',
+    width: '98%',
+    alignSelf: 'center',
   },
 
   guessCell: {
@@ -369,9 +385,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     margin: 1,
+    borderRadius: 8,
+
+    transition: 'transform 0.2s ease-out',
+    cursor: 'pointer',
   },
+
   letter: {
-    color: colors.light,
+    color: colors.lightDark,
     fontSize: 30,
     fontFamily: 'Roboto',
     fontWeight: 'bold',

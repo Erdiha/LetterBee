@@ -31,7 +31,7 @@ interface GameScreenProps {
   updatePlayer: (updatedPlayer: IPlayer) => void;
 }
 
-function GameScreen({ navigation }) {
+function GameScreen({ navigation }: GameScreenProps) {
   const [singlePlayer, setSinglePlayer] = React.useState(false);
   const [player, setPlayer] = React.useState<IPlayer>({ name: '', score: 0 });
   const [start, setStart] = React.useState(0);
