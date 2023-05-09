@@ -6,13 +6,13 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import { colors } from '../../assets/colors';
 
 function ModalComponent({
-  gameOver,
+  roundIsOver,
   secretWord,
   playerScore,
   roundCount,
   resetGame,
 }) {
-  const [isModalVisible, setModalVisible] = useState(gameOver);
+  const [isModalVisible, setModalVisible] = useState(roundIsOver);
   const word = secretWord.join('').toUpperCase();
   console.log('player', playerScore);
   return (

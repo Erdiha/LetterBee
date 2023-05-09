@@ -10,7 +10,10 @@ import {
 } from 'react-native';
 import { RootStackParamList } from './types';
 import Animated, {
+  BounceInDown,
+  BounceOutDown,
   FadeInUp,
+  FlipInEasyX,
   SlideInLeft,
   SlideInRight,
   SlideOutLeft,
@@ -23,7 +26,7 @@ type GameScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Game'>;
 
 interface IPlayer {
   name: string;
-  score: number;
+  info: [];
 }
 
 interface GameScreenProps {
@@ -32,9 +35,12 @@ interface GameScreenProps {
 }
 
 function GameScreen({ navigation }: GameScreenProps) {
-  const [singlePlayer, setSinglePlayer] = React.useState(false);
-  const [player, setPlayer] = React.useState<IPlayer>({ name: '', score: 0 });
-  const [start, setStart] = React.useState(0);
+  const [multiPlayer, setMultiPlayer] = React.useState(false);
+  const [player, setPlayer] = React.useState<IPlayer>({
+    name: '',
+    info: [],
+  });
+  const [start, setStart] = React.useState<number>(0);
 
   const handlePlayerName = (text: string) => {
     // Regular expression to match only letters or a letter followed by numbers
@@ -54,13 +60,17 @@ function GameScreen({ navigation }: GameScreenProps) {
   const chooseGameType = () => {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Animated.View entering={SlideInLeft} exiting={SlideOutRight}>
+        <Animated.View
+          entering={SlideInLeft.duration(500).delay(500)}
+          exiting={SlideOutRight}>
           <TouchableOpacity onPress={() => setStart(1)} style={styles.buttons}>
             <Text style={styles.buttonText}>Single Player</Text>
           </TouchableOpacity>
         </Animated.View>
-        <Animated.View entering={SlideInRight} exiting={SlideOutLeft}>
-          <TouchableOpacity style={styles.buttons}>
+        <Animated.View
+          entering={SlideInRight.duration(500).delay(400)}
+          exiting={SlideOutLeft}>
+          <TouchableOpacity onPress={() => setStart(3)} style={styles.buttons}>
             <Text style={styles.buttonText}>Multi Player</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -84,6 +94,38 @@ function GameScreen({ navigation }: GameScreenProps) {
     );
   };
 
+  const handleComingSoon = () => {
+    setTimeout(() => {
+      setStart(0);
+    }, 1500);
+    return (
+      <Animated.View
+        entering={FlipInEasyX.duration(900)}
+        exiting={BounceOutDown}
+        style={styles.comingSoon}>
+        <Text style={styles.comingSoonText}>Coming Soon!</Text>
+      </Animated.View>
+    );
+  };
+
+  const handleChoice = (choice: number) => {
+    switch (choice) {
+      case 0:
+        return chooseGameType();
+
+      case 1:
+        return renderInputName();
+      case 2:
+        return (
+          <Game player={player} setPlayer={setPlayer} navigation={navigation} />
+        );
+      case 3:
+        return handleComingSoon();
+      default:
+        break;
+    }
+  };
+
   return (
     <Animated.View
       entering={FadeInUp}
@@ -93,13 +135,7 @@ function GameScreen({ navigation }: GameScreenProps) {
         justifyContent: 'center',
         alignItems: 'center',
       }}>
-      {start === 0 ? (
-        chooseGameType()
-      ) : start === 1 ? (
-        renderInputName()
-      ) : (
-        <Game player={player} setPlayer={setPlayer} navigation={navigation} />
-      )}
+      {handleChoice(start)}
     </Animated.View>
   );
 }
@@ -110,7 +146,17 @@ export default GameScreen;
 
 const styles = StyleSheet.create({
   inputWrapper: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  comingSoon: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.lightDark,
 
+    padding: 20,
+    borderRadius: 10,
+    elevation: 10,
+  },
+  comingSoonText: { color: colors.light, fontSize: 30, fontFamily: 'Roboto' },
   buttons: {
     backgroundColor: colors.lightDark,
     width: 150,
@@ -120,6 +166,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 10,
     margin: 10,
+    elevation: 10,
   },
   buttonText: {
     color: colors.light,

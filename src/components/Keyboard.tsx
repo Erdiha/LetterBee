@@ -10,7 +10,13 @@ import { colors } from '../../assets/colors';
 import { keyRows, backspace, enter } from './constants';
 import Animated, { BounceIn } from 'react-native-reanimated';
 
-const Keyboard = ({ onPress, foundTheWord, keyboardColors, gameOver }: any) => {
+const Keyboard = ({
+  onPress,
+  foundTheWord,
+  keyboardColors,
+  gameOver,
+  roundIsOver,
+}: any) => {
   const enterJSX = <Text style={styles.enter}>ENTER</Text>;
 
   const restJSX = (letter: string | any) => (
@@ -49,7 +55,7 @@ const Keyboard = ({ onPress, foundTheWord, keyboardColors, gameOver }: any) => {
               key={letterIndex}>
               <TouchableOpacity
                 activeOpacity={0.3}
-                disabled={foundTheWord || gameOver}
+                disabled={foundTheWord || gameOver || roundIsOver}
                 style={[
                   styles.button,
                   letter === backspace && styles.backspace,
@@ -70,7 +76,7 @@ const Keyboard = ({ onPress, foundTheWord, keyboardColors, gameOver }: any) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
+    backgroundColor: '#F0F0F0',
     padding: 8,
     borderRadius: 5,
   },
@@ -80,11 +86,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   button: {
-    backgroundColor: '#EFEFEF',
+    backgroundColor: colors.light,
     justifyContent: 'center',
     alignItems: 'center',
     margin: 2,
-    width: 33,
+    width: 35,
     height: 60,
     borderRadius: 3,
     borderColor: colors.lightDark,

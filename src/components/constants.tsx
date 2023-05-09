@@ -11,7 +11,7 @@ export const keyRows = [
   [backspace, 'Z', 'X', 'C', 'V', 'B', 'N', 'M', enter],
 ];
 
-export const title = ['K', 'O', 'O', 'R', 'D', 'L', 'E'];
+export const title = ['L', 'E', 'T', 'T', 'E', 'R', '🐝'];
 export const bgColor = [
   '#617A55',
   '#F08A5D',
@@ -19,5 +19,7 @@ export const bgColor = [
   '#6A2C70',
   '#F38181',
   '#A4D0A4',
-  '#95E1D3',
+  colors.light,
 ];
+
+export const TOTAL_SCORE = 150;

@@ -1,4 +1,10 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  BackHandler,
+} from 'react-native';
 import { colors } from '../../assets/colors';
 import React from 'react';
 import Animated, { SlideInUp, SlideOutDown } from 'react-native-reanimated';
@@ -14,6 +20,19 @@ const Prompter = ({
   secretWord,
   setShowInfo,
 }) => {
+  React.useEffect(() => {
+    const backAction = () => {
+      // Perform any necessary cleanup or saving of data here
+      BackHandler.exitApp(); // Exit the app
+      return true;
+    };
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+    return () => backHandler.remove(); // Remove the event listener on unmount
+  }, []);
+
   const info = [];
   if (type === 'lost') {
     info.push(
@@ -48,7 +67,7 @@ const Prompter = ({
         {`Attempt: ${attempt}`}
         {'\n'}
         {'\n'}
-        {`Score: ${player.score + '/' + roundCount.current}`}
+        {`Score: ${player?.info[player?.info?.length - 1] + '/' + 150}`}
       </Text>,
     );
   }
@@ -77,8 +96,14 @@ const Prompter = ({
         <Text>{info[0]}</Text>
       </View>
       <View style={styles.controlContainer}>
-        <TouchableOpacity onPress={() => resetGame()} style={{}}>
-          <Text style={styles.buttonText}>NEXT ROUND</Text>
+        <TouchableOpacity onPress={() => BackHandler.exitApp()}>
+          <Text
+            style={[
+              styles.buttonText,
+              { backgroundColor: colors.red, color: colors.light },
+            ]}>
+            EXIT GAME
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => handleNewGame()} style={{}}>
           <Text style={styles.buttonText}>NEW GAME</Text>

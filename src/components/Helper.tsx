@@ -1,4 +1,8 @@
 import { colors } from '../../assets/colors';
+import { words } from './data';
+import { PlayerScore } from '../screens/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ToastAndroid } from 'react-native';
 
 export const CheckKeyColor = ({
   letter,
@@ -21,6 +25,7 @@ export const CheckKeyColor = ({
     return { key: letter, color: colors.gray };
   }
 };
+
 const validateGuess = async ({ row }) => {
   const w = row.join('').toLowerCase();
   let data = null;
@@ -46,15 +51,77 @@ export const checkWord = async ({ row }) => {
   }
 };
 
-export const getDate = (): number => {
+export const getDate = (): string => {
   const now: Date = new Date();
-  const start: Date = new Date(now.getFullYear(), 0, 0);
-  const diff: number = now.getTime() - start.getTime();
-  const oneDay: number = 1000 * 60 * 60 * 24;
-  const day: number = Math.floor(diff / oneDay);
-  return day;
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  };
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  };
+  const date: string = now.toLocaleDateString(undefined, dateOptions);
+  const time: string = now.toLocaleTimeString(undefined, timeOptions);
+  return `${date} ${time}`;
 };
 
-export const handleScore = (score: number, roundCount: number): number => {
-  return score;
+export const keyBoardColors = {
+  [colors.yellow]: [],
+  [colors.green]: [],
+  [colors.gray]: [],
+};
+
+export const getSecretWord = () => {
+  const randomIndex = Math.floor(Math.random() * words.length);
+  return words[randomIndex] ? words[randomIndex].split('') : [];
+};
+
+export const getScoreSum = (playerScore: { current: PlayerScore }) => {
+  return Object.values(playerScore.current).reduce(
+    (acc, score) => acc + score,
+    0,
+  );
+};
+
+export const sortInfoByScore = ({ setPlayer }): void => {
+  setPlayer((prevPlayer: any) => ({
+    ...prevPlayer,
+    info: prevPlayer.info.sort((a, b) => b.score - a.score),
+  }));
+};
+
+// To store a value
+export const storeData = async (data: any) => {
+  try {
+    if (data.type === 'game') {
+      const dataString = JSON.stringify(data.gameState);
+
+      await AsyncStorage.setItem('gameStat', dataString);
+    } else if (data.type === 'user') {
+      const dataString = JSON.stringify(data.userData);
+      await AsyncStorage.setItem('userData', dataString);
+    }
+  } catch (error) {
+    ToastAndroid.show('Error storing data', ToastAndroid.SHORT);
+  }
+  console.log('async data', data);
+};
+
+// To retrieve a value
+export const retrieveData = async () => {
+  try {
+    const userData = await AsyncStorage.getItem('userData');
+    const gameState = await AsyncStorage.getItem('gameState');
+    const parsedUserData = JSON.parse(userData);
+    const parsedGameState = JSON.parse(gameState);
+    console.log(parsedUserData, parsedGameState);
+    return { userData: parsedUserData, gameState: parsedGameState };
+  } catch (error) {
+    // Handle error
+    ToastAndroid.show('Error retrieving data', ToastAndroid.SHORT);
+  }
 };

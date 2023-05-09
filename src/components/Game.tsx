@@ -4,27 +4,23 @@ import { words } from './data';
 import { colors } from '../../assets/colors';
 import Keyboard from './Keyboard';
 import useScore from './useScore';
-
-import Animated, {
-  SlideInLeft,
-  FlipInEasyX,
-  FlipInEasyY,
-  SlideOutLeft,
-  RollInRight,
-  ZoomInUp,
-  SlideOutRight,
-  BounceIn,
-  BounceInLeft,
-  BounceInRight,
-  BounceInUp,
-} from 'react-native-reanimated';
-import ModalComponent from './ModalComponent';
+import Animated, { FlipInEasyX, BounceIn } from 'react-native-reanimated';
 import { AntDesign } from '@expo/vector-icons';
 import Prompter from './Prompter';
 import UserAvatar from './UserAvatar';
-import { CheckKeyColor, checkWord, handleScore } from './Helper';
+import {
+  checkWord,
+  getDate,
+  getScoreSum,
+  keyBoardColors,
+  retrieveData,
+  sortInfoByScore,
+  storeData,
+} from './Helper';
 const TOTAL_SCORE = 150;
 const MAX_ROUND = 3;
+import renderGuesses from './RenderGuesses';
+import PlayerData from './PlayerData';
 
 const Game = ({ player, setPlayer, navigation }) => {
   const validWords = words;
@@ -37,17 +33,50 @@ const Game = ({ player, setPlayer, navigation }) => {
   const [col, setCol] = useState(0);
   const [foundTheWord, setFoundTheWord] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const roundCount = useRef(0);
+  const roundCount = useRef(1);
   const [showInfo, setShowInfo] = useState(false);
   const [info, setInfo] = useState('');
-
-  const playerScore = useRef(player.score);
-
-  const keyBoardColors = {
-    [colors.yellow]: [],
-    [colors.green]: [],
-    [colors.gray]: [],
+  const playerScore = useRef({ 1: 0, 2: 0, 3: 0 });
+  const [showProfile, setShowProfile] = useState(false);
+  const [roundIsOver, setRoundIsOver] = useState(false);
+  const data = {
+    allGuesses,
+    secretWord,
+    gameOver,
+    guess,
+    row,
+    col,
+    foundTheWord,
+    attempt,
+    roundCount: roundCount.current,
+    showInfo,
+    playerScore: playerScore.current,
+    showProfile,
+    roundIsOver,
+    player,
   };
+
+  useEffect(() => {
+    async function fetchData() {
+      const { userData, gameState } = await retrieveData();
+      setPlayer(userData);
+      console.log('retrieve data', gameState, userData);
+      if (gameState) {
+        setAllGuesses(gameState.allGuesses);
+        setSecretWord(gameState.secretWord);
+        setGameOver(gameState.gameOver);
+        setRow(gameState.row);
+        setCol(gameState.col);
+        setFoundTheWord(gameState.foundTheWord);
+        setAttempt(gameState.attempt);
+        playerScore.current = gameState.playerScore;
+        setShowInfo(gameState.showInfo);
+        setPlayer(gameState.player);
+      }
+    }
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * validWords.length);
@@ -55,42 +84,50 @@ const Game = ({ player, setPlayer, navigation }) => {
   }, []);
 
   useEffect(() => {
-    !gameOver && handleScore();
+    if (roundCount.current === MAX_ROUND + 1) {
+      setGameOver(true);
+    }
+    if (roundIsOver) {
+      roundCount.current += 1;
+      resetGame();
+    }
+  }, [roundIsOver]);
+
+  useEffect(() => {
+    !roundIsOver && handleScore();
   }, [allGuesses]);
 
+  useEffect(() => {
+    setInfo('gameover');
+    if (gameOver) {
+      console.log('getscoresum', getScoreSum(playerScore));
+      const userData = { score: getScoreSum(playerScore), date: getDate() };
+      player?.info?.push(userData);
+      sortInfoByScore({ setPlayer });
+      storeData({ playerData: player, type: 'user' });
+      handleNewGame();
+    }
+  }, [gameOver]);
+
   const handleScore = () => {
-    if (!player || player.score == null) {
-      console.error('Player or score is null or undefined');
-      return;
-    }
-
-    if (typeof foundTheWord !== 'boolean') {
-      console.error('foundTheWord is not a boolean value');
-      return;
-    }
-
     if (attempt < 0 || attempt > 5) {
       console.error('Attempt value is out of range');
       return;
     }
 
     if (foundTheWord) {
-      playerScore.current += 1;
+      // playerScore.current += 1;
       setAttempt(0);
-
-      roundCount.current += 1;
-
-      setGameOver(true);
+      setRoundIsOver(true);
+      setAllGuesses([]);
     } else if (attempt === 5) {
-      roundCount.current += 1;
-
       if (!foundTheWord) {
+        setAllGuesses([]);
         ToastAndroid.show('You lost', ToastAndroid.SHORT);
         setShowInfo(true);
         setInfo('lost');
+        setRoundIsOver(true);
       }
-
-      setGameOver(true);
     }
   };
 
@@ -115,80 +152,19 @@ const Game = ({ player, setPlayer, navigation }) => {
   };
 
   const resetGame = () => {
-    setAllGuesses([]);
-    setGuess(['', '', '', '', '']);
     setCol(0);
     setRow(0);
-    setGameOver(false);
     newWord();
+    setAllGuesses([]);
+    setGuess(['', '', '', '', '']);
     setFoundTheWord(false);
     setAttempt(0);
-    setShowInfo(false);
-  };
-
-  const renderGuesses = () => {
-    return (
-      <View style={styles.guessedWordsContainer}>
-        {foundTheWord && gameOver ? (
-          <ModalComponent
-            secretWord={secretWord}
-            gameOver={gameOver}
-            playerScore={playerScore}
-            roundCount={roundCount}
-            resetGame={resetGame}
-          />
-        ) : (
-          allGuesses.map((row, rowIndex) => {
-            correctpos.current = 0; // set correctpos to zero for each row
-
-            return (
-              <Animated.View
-                entering={SlideInLeft}
-                exiting={SlideOutLeft}
-                key={rowIndex}
-                style={[styles.guessRow, { backgroundColor: colors.light }]}>
-                {row.map((letter, cellIndex) => {
-                  const { key, color } = CheckKeyColor({
-                    letter,
-                    cellIndex,
-                    secretWord,
-                    correctpos,
-                  });
-
-                  keyBoardColors[color].push(key);
-
-                  const cellStyle = {
-                    ...styles.guessCell,
-                    backgroundColor: letter === '?' ? 'red' : color,
-                    bordercolor: colors.lightDark,
-                    borderwidth: 2,
-                  };
-                  if (correctpos.current === 5) {
-                    setFoundTheWord(true);
-                    setGuess(allGuesses[allGuesses.length - 1]);
-                    handleScore();
-                  }
-
-                  return (
-                    <Animated.View
-                      entering={
-                        letter === '?'
-                          ? ZoomInUp.delay(300 * cellIndex)
-                          : FlipInEasyX.delay(300 * cellIndex)
-                      }
-                      exiting={FlipInEasyY.delay(300 * cellIndex)}
-                      key={cellIndex}
-                      style={cellStyle}>
-                      <Text style={styles.letter}>{letter}</Text>
-                    </Animated.View>
-                  );
-                })}
-              </Animated.View>
-            );
-          })
-        )}
-      </View>
-    );
+    setRoundIsOver(false);
+    gameOver
+      ? setShowInfo(true)
+      : setTimeout(() => {
+          setShowInfo(false);
+        }, 2000);
   };
 
   const onPress = (letter: string) => {
@@ -196,9 +172,7 @@ const Game = ({ player, setPlayer, navigation }) => {
       if (guess.includes('')) {
         return;
       }
-
       setAttempt(attempt + 1);
-
       checkWord({ row: guess }).then((result) => {
         if (result) {
           setAllGuesses([...allGuesses, guess]);
@@ -207,7 +181,6 @@ const Game = ({ player, setPlayer, navigation }) => {
           setAllGuesses([...allGuesses, ['?', '?', '?', '?', '?']]);
         }
       });
-
       handleScore();
       setGuess(['', '', '', '', '']);
       setRow(0);
@@ -238,16 +211,29 @@ const Game = ({ player, setPlayer, navigation }) => {
 
   const handleNewGame = () => {
     resetGame();
-    player.score = 0;
-    player.name = '';
+    setGameOver(false);
     setPlayer(player);
-    navigation.navigate('Home');
     roundCount.current = 0;
+    navigation.navigate('Home');
+    playerScore.current = { 1: 0, 2: 0, 3: 0 };
+    for (let key in keyBoardColors) {
+      keyBoardColors[key] = [];
+    }
   };
+
   const handleScoreDisplay = () => {
     const newScore = useScore({ secretWord, attempt, allGuesses });
-    console.log(newScore);
-    return TOTAL_SCORE - newScore;
+    playerScore.current[roundCount.current] = newScore;
+    const totalScore: number = getScoreSum(playerScore);
+    console.log(
+      'newScore',
+      newScore,
+      'roundCount',
+      roundCount.current,
+      playerScore.current,
+    );
+
+    return TOTAL_SCORE - totalScore;
   };
 
   return (
@@ -261,9 +247,16 @@ const Game = ({ player, setPlayer, navigation }) => {
           display: 'flex',
           position: 'relative',
         }}>
-        <Text style={styles.headerText}>
-          {handleScoreDisplay()}/{TOTAL_SCORE}
-        </Text>
+        <Animated.View entering={BounceIn}>
+          <Text style={styles.headerText}>
+            <Text
+              style={{ fontWeight: '700', color: colors.red, fontSize: 25 }}>
+              {handleScoreDisplay()}{' '}
+            </Text>
+            /{TOTAL_SCORE}
+          </Text>
+        </Animated.View>
+        {/* <Ionicons name='trail-sign' size={32} color='green' /> */}
         <View
           style={{
             alignSelf: 'center',
@@ -275,7 +268,7 @@ const Game = ({ player, setPlayer, navigation }) => {
           }}>
           <AntDesign
             size={35}
-            name='infocirlce'
+            name='infocirlceo'
             color={colors.light}
             style={{ fontWeight: 'bold' }}
             onPress={() => {
@@ -284,7 +277,7 @@ const Game = ({ player, setPlayer, navigation }) => {
             }}
           />
         </View>
-        <UserAvatar player={player} />
+        <UserAvatar player={player} setShowProfile={setShowProfile} />
       </View>
       {/* guess row tiles */}
       <View style={styles.guessRow}>
@@ -323,7 +316,20 @@ const Game = ({ player, setPlayer, navigation }) => {
         )}
       </View>
 
-      {renderGuesses()}
+      {renderGuesses({
+        playerScore,
+        secretWord,
+        foundTheWord,
+        roundIsOver,
+        roundCount,
+        resetGame,
+        allGuesses,
+        correctpos,
+        setFoundTheWord,
+        setGuess,
+        handleScore,
+        keyBoardColors,
+      })}
 
       {/* keyboard */}
       <View style={styles.keyboardContainer}>
@@ -331,10 +337,14 @@ const Game = ({ player, setPlayer, navigation }) => {
           onPress={onPress}
           foundTheWord={foundTheWord}
           gameOver={gameOver}
+          roundIsOver={roundIsOver}
           keyboardColors={keyBoardColors}
         />
       </View>
-      {showInfo && proptUser()}
+      <>
+        {showInfo && proptUser()}
+        {showProfile && PlayerData({ player, setShowProfile })}
+      </>
     </View>
   );
 };
@@ -356,6 +366,7 @@ const styles = StyleSheet.create({
     margin: 10,
     borderWidth: 0.5,
     borderColor: colors.lightDark,
+    fontWeight: 'bold',
   },
 
   guessedWordsContainer: {
@@ -364,7 +375,7 @@ const styles = StyleSheet.create({
     margin: 20,
   },
   keyboardContainer: {
-    flex: 3 / 4,
+    flex: 2 / 3,
 
     alignSelf: 'stretch',
     width: '100%',
