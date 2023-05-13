@@ -1,5 +1,5 @@
 import { StackNavigationProp } from '@react-navigation/stack';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,17 +10,17 @@ import {
 } from 'react-native';
 import { RootStackParamList } from './types';
 import Animated, {
-  BounceInDown,
   BounceOutDown,
   FadeInUp,
   FlipInEasyX,
   SlideInLeft,
   SlideInRight,
-  SlideOutLeft,
-  SlideOutRight,
+  SlideInUp,
+  SlideOutDown,
 } from 'react-native-reanimated';
-import { colors } from '../../assets/colors';
-import Game from '../components/Game';
+import { colors } from '../utils/colors';
+import Game from '../components/game/Game';
+import Rules from '../utils/Rules';
 
 type GameScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Game'>;
 
@@ -35,7 +35,8 @@ interface GameScreenProps {
 }
 
 function GameScreen({ navigation }: GameScreenProps) {
-  const [multiPlayer, setMultiPlayer] = React.useState(false);
+  const [isValidInput, setIsValidInput] = useState(false);
+
   const [player, setPlayer] = React.useState<IPlayer>({
     name: '',
     info: [],
@@ -43,17 +44,25 @@ function GameScreen({ navigation }: GameScreenProps) {
   const [start, setStart] = React.useState<number>(0);
 
   const handlePlayerName = (text: string) => {
-    // Regular expression to match only letters or a letter followed by numbers
-    const regex = /^[a-zA-Z][a-zA-Z0-9]*$/;
+    const regex = /^[a-zA-Z]+$/;
 
-    if (text === '' || regex.test(text)) {
-      // If the text matches the regular expression, it's a valid input
-      setPlayer({ ...player, name: text });
+    if (text.trim() !== '' && regex.test(text)) {
+      setPlayer((prevPlayer) => ({ ...prevPlayer, name: text }));
+      setIsValidInput(true);
       console.log('Valid input:', text);
     } else {
-      // If the text doesn't match the regular expression, it's an invalid input
-      ToastAndroid.show('Invalid input', ToastAndroid.SHORT);
+      setPlayer((prevPlayer) => ({ ...prevPlayer, name: text }));
+      setIsValidInput(false);
       console.log('Invalid input:', text);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (isValidInput) {
+      // Perform the submit action
+      setStart(2);
+    } else {
+      ToastAndroid.show('Invalid input', ToastAndroid.SHORT);
     }
   };
 
@@ -62,16 +71,41 @@ function GameScreen({ navigation }: GameScreenProps) {
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <Animated.View
           entering={SlideInLeft.duration(500).delay(500)}
-          exiting={SlideOutRight}>
+          exiting={SlideOutDown}>
           <TouchableOpacity onPress={() => setStart(1)} style={styles.buttons}>
             <Text style={styles.buttonText}>Single Player</Text>
           </TouchableOpacity>
         </Animated.View>
         <Animated.View
           entering={SlideInRight.duration(500).delay(400)}
-          exiting={SlideOutLeft}>
+          exiting={SlideOutDown}>
           <TouchableOpacity onPress={() => setStart(3)} style={styles.buttons}>
             <Text style={styles.buttonText}>Multi Player</Text>
+          </TouchableOpacity>
+        </Animated.View>
+        <Animated.View entering={SlideInUp} exiting={SlideOutDown.delay(200)}>
+          <TouchableOpacity
+            onPress={() => setStart(4)}
+            style={[
+              styles.buttons,
+              {
+                marginTop: 100,
+                backgroundColor: colors.light,
+                borderColor: colors.lightDark,
+                borderWidth: 3,
+              },
+            ]}>
+            <Text
+              style={[
+                styles.buttonText,
+                {
+                  color: colors.red,
+                  fontWeight: '800',
+                  letterSpacing: 2,
+                },
+              ]}>
+              RULES
+            </Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -87,7 +121,10 @@ function GameScreen({ navigation }: GameScreenProps) {
           value={player.name}
           onChangeText={(text) => handlePlayerName(text)}
         />
-        <TouchableOpacity onPress={() => setStart(2)} style={styles.buttons}>
+        <TouchableOpacity
+          onPress={handleSubmit}
+          style={styles.buttons}
+          disabled={!isValidInput}>
           <Text style={styles.buttonText}>START</Text>
         </TouchableOpacity>
       </Animated.View>
@@ -121,6 +158,8 @@ function GameScreen({ navigation }: GameScreenProps) {
         );
       case 3:
         return handleComingSoon();
+      case 4:
+        return <Rules setStart={setStart} />;
       default:
         break;
     }

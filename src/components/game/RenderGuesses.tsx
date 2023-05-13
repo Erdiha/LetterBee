@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import React from 'react';
-import { colors } from '../../assets/colors';
+import { colors } from '../../utils/colors';
 
 import Animated, {
   SlideInLeft,
@@ -8,10 +8,12 @@ import Animated, {
   FlipInEasyY,
   ZoomInUp,
   SlideOutRight,
+  ZoomInDown,
+  BounceOut,
 } from 'react-native-reanimated';
-import ModalComponent from './ModalComponent';
+import ModalComponent from '../prompters/ModalComponent';
 
-import { CheckKeyColor } from './Helper';
+import { CheckKeyColor } from '../../utils/Helper';
 
 const renderGuesses = ({
   playerScore,
@@ -19,13 +21,15 @@ const renderGuesses = ({
   foundTheWord,
   roundIsOver,
   roundCount,
-  resetGame,
+  resetRound,
   allGuesses,
   correctpos,
+  setAllGuesses,
   setFoundTheWord,
   setGuess,
   handleScore,
   keyBoardColors,
+  score,
 }) => {
   return (
     <View style={styles.guessedWordsContainer}>
@@ -35,10 +39,12 @@ const renderGuesses = ({
           roundIsOver={roundIsOver}
           playerScore={playerScore}
           roundCount={roundCount}
-          resetGame={resetGame}
+          resetRound={resetRound}
+          setAllGuesses={setAllGuesses}
+          score={score}
         />
       ) : (
-        allGuesses.map((row, rowIndex) => {
+        allGuesses.map((row: string[], rowIndex: number) => {
           correctpos.current = 0; // set correctpos to zero for each row
 
           return (
@@ -64,19 +70,18 @@ const renderGuesses = ({
                   borderwidth: 2,
                 };
                 if (correctpos.current === 5) {
-                  setFoundTheWord(true);
                   setGuess(allGuesses[allGuesses.length - 1]);
+                  setFoundTheWord(true);
                   handleScore();
                 }
-
                 return (
                   <Animated.View
                     entering={
                       letter === '?'
-                        ? ZoomInUp.delay(300 * cellIndex)
-                        : FlipInEasyX.delay(300 * cellIndex)
+                        ? ZoomInDown.delay(250 * cellIndex)
+                        : FlipInEasyX.delay(250 * cellIndex)
                     }
-                    exiting={FlipInEasyY.delay(300 * cellIndex)}
+                    exiting={BounceOut.delay(300 * cellIndex)}
                     key={cellIndex}
                     style={cellStyle}>
                     <Text style={styles.letter}>{letter}</Text>
@@ -138,9 +143,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 1,
-    borderRadius: 8,
-
+    margin: 3,
+    borderRadius: 6,
     transition: 'transform 0.2s ease-out',
     cursor: 'pointer',
   },

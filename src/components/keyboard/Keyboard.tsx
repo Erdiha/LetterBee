@@ -6,8 +6,8 @@ import {
   StyleSheet,
   Vibration,
 } from 'react-native';
-import { colors } from '../../assets/colors';
-import { keyRows, backspace, enter } from './constants';
+import { colors } from '../../utils/colors';
+import { keyRows, backspace, enter } from '../../utils/constants';
 import Animated, { BounceIn } from 'react-native-reanimated';
 
 const Keyboard = ({
@@ -37,7 +37,7 @@ const Keyboard = ({
   };
 
   const handlePress = (letter: any) => {
-    Vibration.vibrate(40);
+    Vibration.vibrate(10);
     if (letter === backspace) {
       onPress('backspace');
     } else {

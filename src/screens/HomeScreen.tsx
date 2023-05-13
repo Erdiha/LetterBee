@@ -8,18 +8,14 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { colors } from '../../assets/colors';
+import { colors } from '../utils/colors';
 import Animation, {
   BounceInLeft,
   BounceInRight,
-  SlideInDown,
-  SlideInLeft,
-  SlideInRight,
   SlideInUp,
-  SlideOutDown,
 } from 'react-native-reanimated';
 import { RootStackParamList } from './types';
-import { title, bgColor, enter } from '../components/constants';
+import { title, bgColor, enter } from '../utils/constants';
 import Animated from 'react-native-reanimated';
 import { useFonts } from 'expo-font';
 
@@ -47,7 +43,6 @@ function HomeScreen({ navigation }: { navigation: HomeScreenNavigationProp }) {
             position: 'absolute',
             justifyContent: 'flex-end',
             alignItems: 'center',
-
             backgroundColor: bgColor[index],
             margin: 2,
             borderRadius: index === title.length - 1 ? 50 : 0,

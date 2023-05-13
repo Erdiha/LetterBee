@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import React from 'react';
 import { Avatar, Icon } from 'react-native-elements';
-import { colors } from '../../assets/colors';
+import { colors } from '../../utils/colors';
 
 const UserAvatar = ({ player, setShowProfile }) => {
   return (
@@ -17,8 +17,8 @@ const UserAvatar = ({ player, setShowProfile }) => {
           size='medium'
           rounded
           title={
-            player?.name[0]
-              ? player?.name[0] + player?.name[1]?.toUpperCase()
+            player?.name && player?.name[0]
+              ? player?.name[0] + (player?.name[1]?.toUpperCase() || '')
               : 'P'
           }
           activeOpacity={0.7}

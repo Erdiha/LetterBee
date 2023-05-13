@@ -1,26 +1,31 @@
 import { View, Text, StyleSheet, ToastAndroid } from 'react-native';
-import React, { useEffect, useRef, useState } from 'react';
-import { words } from './data';
-import { colors } from '../../assets/colors';
-import Keyboard from './Keyboard';
-import useScore from './useScore';
-import Animated, { FlipInEasyX, BounceIn } from 'react-native-reanimated';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { words } from '../../utils/data';
+import { colors } from '../../utils/colors';
+import Keyboard from '../keyboard/Keyboard';
+import Animated, { BounceIn } from 'react-native-reanimated';
 import { AntDesign } from '@expo/vector-icons';
-import Prompter from './Prompter';
-import UserAvatar from './UserAvatar';
+import Prompter from '../prompters/Prompter';
+import UserAvatar from '../prompters/UserAvatar';
 import {
-  checkWord,
   getDate,
   getScoreSum,
+  handleScoreDisplay,
   keyBoardColors,
   retrieveData,
-  sortInfoByScore,
   storeData,
-} from './Helper';
-const TOTAL_SCORE = 150;
-const MAX_ROUND = 3;
+} from '../../utils/Helper';
+
 import renderGuesses from './RenderGuesses';
-import PlayerData from './PlayerData';
+import PlayerData from '../prompters/PlayerData';
+import KeyPressRender from './KeyPressRender';
+import { MAX_ATTEMPTS, MAX_ROUND, TOTAL_SCORE } from '../../utils/constants';
 
 const Game = ({ player, setPlayer, navigation }) => {
   const validWords = words;
@@ -35,14 +40,20 @@ const Game = ({ player, setPlayer, navigation }) => {
   const [attempt, setAttempt] = useState(0);
   const roundCount = useRef(1);
   const [showInfo, setShowInfo] = useState(false);
-  const [info, setInfo] = useState('');
+  const [info, setInfo] = useState('info');
   const playerScore = useRef({ 1: 0, 2: 0, 3: 0 });
   const [showProfile, setShowProfile] = useState(false);
   const [roundIsOver, setRoundIsOver] = useState(false);
+  const [giveup, setGiveup] = useState(false);
+  const giveUpPoints = useRef(0);
+  console.log('player', player);
+
+  const score = useRef(0);
   const data = {
     allGuesses,
     secretWord,
     gameOver,
+    correctpos: correctpos.current,
     guess,
     row,
     col,
@@ -50,28 +61,44 @@ const Game = ({ player, setPlayer, navigation }) => {
     attempt,
     roundCount: roundCount.current,
     showInfo,
+    info,
     playerScore: playerScore.current,
     showProfile,
     roundIsOver,
-    player,
   };
-
+  const newWord = () => {
+    const randomIndex = Math.floor(Math.random() * validWords.length);
+    setSecretWord(validWords[randomIndex].split(''));
+  };
   useEffect(() => {
     async function fetchData() {
-      const { userData, gameState } = await retrieveData();
-      setPlayer(userData);
-      console.log('retrieve data', gameState, userData);
-      if (gameState) {
-        setAllGuesses(gameState.allGuesses);
-        setSecretWord(gameState.secretWord);
-        setGameOver(gameState.gameOver);
-        setRow(gameState.row);
-        setCol(gameState.col);
-        setFoundTheWord(gameState.foundTheWord);
-        setAttempt(gameState.attempt);
-        playerScore.current = gameState.playerScore;
-        setShowInfo(gameState.showInfo);
-        setPlayer(gameState.player);
+      const userData = await retrieveData({ userName: player.name });
+
+      if (userData !== null) {
+        const { gameState } = userData;
+
+        console.log('usetate retrieve data', gameState, userData);
+
+        if (gameState !== null && userData.userData !== undefined) {
+          setAllGuesses(gameState.allGuesses);
+          setSecretWord(gameState.secretWord);
+          setGameOver(gameState.gameOver);
+          setRow(gameState.row);
+          setCol(gameState.col);
+          setFoundTheWord(gameState.foundTheWord);
+          setAttempt(gameState.attempt);
+          playerScore.current = gameState.playerScore;
+          setShowInfo(gameState.showInfo);
+          if (userData.userData.name === player.name) {
+            setPlayer(userData.userData);
+          }
+        } else {
+          // Handle the case when gameState is null or userData.userData is undefined
+          // Perform any necessary actions or set default values
+        }
+      } else {
+        // Handle the case when userData is null
+        // Perform any necessary actions or set default values
       }
     }
 
@@ -84,56 +111,32 @@ const Game = ({ player, setPlayer, navigation }) => {
   }, []);
 
   useEffect(() => {
-    if (roundCount.current === MAX_ROUND + 1) {
-      setGameOver(true);
+    handleScore();
+    if (giveup) {
+      if (attempt < MAX_ATTEMPTS && !foundTheWord) {
+        giveUpPoints.current += (MAX_ATTEMPTS - attempt) * 10;
+      }
+      setGiveup(false);
+      handleScore();
     }
-    if (roundIsOver) {
-      roundCount.current += 1;
-      resetGame();
-    }
-  }, [roundIsOver]);
-
-  useEffect(() => {
-    !roundIsOver && handleScore();
-  }, [allGuesses]);
-
-  useEffect(() => {
-    setInfo('gameover');
-    if (gameOver) {
-      console.log('getscoresum', getScoreSum(playerScore));
-      const userData = { score: getScoreSum(playerScore), date: getDate() };
-      player?.info?.push(userData);
-      sortInfoByScore({ setPlayer });
-      storeData({ playerData: player, type: 'user' });
-      handleNewGame();
-    }
-  }, [gameOver]);
+  }, [allGuesses, foundTheWord, score.current, attempt, roundIsOver, giveup]);
 
   const handleScore = () => {
-    if (attempt < 0 || attempt > 5) {
-      console.error('Attempt value is out of range');
-      return;
+    if (roundCount.current === MAX_ROUND) {
+      setGameOver(true);
+      setInfo('gameover');
+      setShowInfo(true);
     }
-
     if (foundTheWord) {
-      // playerScore.current += 1;
-      setAttempt(0);
       setRoundIsOver(true);
-      setAllGuesses([]);
-    } else if (attempt === 5) {
-      if (!foundTheWord) {
-        setAllGuesses([]);
-        ToastAndroid.show('You lost', ToastAndroid.SHORT);
-        setShowInfo(true);
-        setInfo('lost');
-        setRoundIsOver(true);
-      }
+      ToastAndroid.show('You found the word', ToastAndroid.SHORT);
+    } else if (attempt === MAX_ATTEMPTS && foundTheWord) {
+      setRoundIsOver(true);
+    } else if (attempt === MAX_ATTEMPTS && !foundTheWord) {
+      setInfo('lost');
+      setRoundIsOver(true);
+      setShowInfo(true);
     }
-  };
-
-  const newWord = () => {
-    const randomIndex = Math.floor(Math.random() * validWords.length);
-    setSecretWord(validWords[randomIndex].split(''));
   };
 
   const proptUser = () => {
@@ -141,100 +144,75 @@ const Game = ({ player, setPlayer, navigation }) => {
       <Prompter
         attempt={attempt}
         roundCount={roundCount}
-        player={player}
+        score={score}
         type={info}
-        handleNewGame={handleNewGame}
-        resetGame={resetGame}
+        resetRound={resetRound}
         secretWord={secretWord}
         setShowInfo={setShowInfo}
+        handleNewGame={handleNewGame}
+        gameOver={gameOver}
+        setAllGuesses={setAllGuesses}
+        foundTheWord={foundTheWord}
+        setGiveup={setGiveup}
+        setGameOver={setGameOver}
       />
     );
   };
 
-  const resetGame = () => {
+  const resetRound = () => {
+    for (let key in keyBoardColors) {
+      keyBoardColors[key] = [];
+    }
+
     setCol(0);
     setRow(0);
-    newWord();
-    setAllGuesses([]);
     setGuess(['', '', '', '', '']);
     setFoundTheWord(false);
     setAttempt(0);
     setRoundIsOver(false);
-    gameOver
-      ? setShowInfo(true)
-      : setTimeout(() => {
-          setShowInfo(false);
-        }, 2000);
-  };
+    setShowInfo(false);
+    newWord();
+    setInfo('info');
+    roundCount.current += 1;
 
-  const onPress = (letter: string) => {
-    if (letter === 'ENTER') {
-      if (guess.includes('')) {
-        return;
-      }
-      setAttempt(attempt + 1);
-      checkWord({ row: guess }).then((result) => {
-        if (result) {
-          setAllGuesses([...allGuesses, guess]);
-        } else {
-          ToastAndroid.show('INVALID WORD!!!', ToastAndroid.SHORT);
-          setAllGuesses([...allGuesses, ['?', '?', '?', '?', '?']]);
-        }
-      });
-      handleScore();
-      setGuess(['', '', '', '', '']);
-      setRow(0);
-    } else if (letter === 'backspace') {
-      if (row === 0) {
-        return;
-      }
-      if (row > 0) {
-        guess[row - 1] = '';
-        setGuess(guess);
-        setRow(row - 1);
-      } else {
-        // If we're at the beginning of the row, delete the last letter
-        const lastRow = allGuesses[col].slice(0, -1);
-        setAllGuesses([...allGuesses.slice(0, -1), lastRow]);
-        setRow(4);
-      }
-    } else {
-      if (row === 5) {
-        return;
-      } else {
-        guess[row] = letter;
-        setGuess(guess);
-        setRow(row + 1);
-      }
+    if (roundCount.current === MAX_ROUND) {
+      setGameOver(true);
     }
   };
 
   const handleNewGame = () => {
-    resetGame();
+    const userData = { score: score.current, date: getDate() };
+    player.info.push(userData);
+
+    console.log('handle new game', userData, 'player', player);
+
+    storeData({ userData: player, type: 'userData' });
+    storeData({ gameState: data, type: 'gameState' });
+
+    resetRound();
     setGameOver(false);
-    setPlayer(player);
-    roundCount.current = 0;
-    navigation.navigate('Home');
+    giveUpPoints.current = 0;
+    roundCount.current = 1;
     playerScore.current = { 1: 0, 2: 0, 3: 0 };
     for (let key in keyBoardColors) {
       keyBoardColors[key] = [];
     }
+    setAllGuesses([]);
+    score.current = TOTAL_SCORE;
   };
 
-  const handleScoreDisplay = () => {
-    const newScore = useScore({ secretWord, attempt, allGuesses });
-    playerScore.current[roundCount.current] = newScore;
-    const totalScore: number = getScoreSum(playerScore);
-    console.log(
-      'newScore',
-      newScore,
-      'roundCount',
-      roundCount.current,
-      playerScore.current,
-    );
-
-    return TOTAL_SCORE - totalScore;
-  };
+  const onPress = KeyPressRender(
+    guess,
+    setAttempt,
+    attempt,
+    secretWord,
+    setAllGuesses,
+    allGuesses,
+    setGuess,
+    setRow,
+    row,
+    col,
+  );
 
   return (
     <View style={styles.gameWrapper}>
@@ -251,12 +229,22 @@ const Game = ({ player, setPlayer, navigation }) => {
           <Text style={styles.headerText}>
             <Text
               style={{ fontWeight: '700', color: colors.red, fontSize: 25 }}>
-              {handleScoreDisplay()}{' '}
+              {handleScoreDisplay(
+                allGuesses,
+                roundCount,
+                playerScore,
+                secretWord,
+                attempt,
+                score,
+                foundTheWord,
+                giveup,
+                giveUpPoints,
+              )()}
             </Text>
-            /{TOTAL_SCORE}
+            /{TOTAL_SCORE} {secretWord}
           </Text>
         </Animated.View>
-        {/* <Ionicons name='trail-sign' size={32} color='green' /> */}
+
         <View
           style={{
             alignSelf: 'center',
@@ -281,54 +269,48 @@ const Game = ({ player, setPlayer, navigation }) => {
       </View>
       {/* guess row tiles */}
       <View style={styles.guessRow}>
-        {guess?.map((letter, index) =>
-          foundTheWord ? (
-            <Animated.View
-              entering={FlipInEasyX.damping(0.5).delay(300 * index)}
+        {guess?.map((letter, index) => {
+          const isCurrentRow = row === index;
+          const scale = isCurrentRow && !foundTheWord ? 1.1 : 0.9;
+          const borderColor =
+            isCurrentRow && !foundTheWord ? colors.red : colors.lightDark;
+          const textColor = foundTheWord ? colors.light : colors.lightDark;
+          return (
+            <View
               key={index}
               style={[
                 styles.guessCell,
                 {
                   backgroundColor: foundTheWord ? colors.green : colors.light,
+                  borderColor: borderColor,
+                  transform: [{ scale: scale }],
                 },
-                {},
               ]}>
-              <Text style={styles.letter}>{letter.toUpperCase()}</Text>
-            </Animated.View>
-          ) : (
-            <Animated.View
-              entering={BounceIn.delay(300 * index)}
-              key={index}
-              style={[
-                styles.guessCell,
-                {
-                  backgroundColor: foundTheWord ? colors.green : colors.light,
-                },
-                {
-                  transform: [{ scale: row === index ? 1.1 : 0.9 }],
-                },
-
-                { borderColor: row === index ? colors.red : colors.lightDark },
-              ]}>
-              <Text style={styles.letter}>{letter.toUpperCase()}</Text>
-            </Animated.View>
-          ),
-        )}
+              <Animated.View>
+                <Text style={[styles.letter, { color: textColor }]}>
+                  {' '}
+                  {letter.toUpperCase()}
+                </Text>
+              </Animated.View>
+            </View>
+          );
+        })}
       </View>
-
       {renderGuesses({
         playerScore,
         secretWord,
         foundTheWord,
         roundIsOver,
         roundCount,
-        resetGame,
+        resetRound,
         allGuesses,
         correctpos,
         setFoundTheWord,
         setGuess,
         handleScore,
         keyBoardColors,
+        setAllGuesses,
+        score,
       })}
 
       {/* keyboard */}
@@ -343,7 +325,7 @@ const Game = ({ player, setPlayer, navigation }) => {
       </View>
       <>
         {showInfo && proptUser()}
-        {showProfile && PlayerData({ player, setShowProfile })}
+        {showProfile && PlayerData({ player, setShowProfile, setPlayer })}
       </>
     </View>
   );
@@ -395,9 +377,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 1,
+    elevation: 5,
     borderRadius: 8,
-
+    margin: 5,
     transition: 'transform 0.2s ease-out',
     cursor: 'pointer',
   },

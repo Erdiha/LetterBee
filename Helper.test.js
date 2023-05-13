@@ -1,5 +1,5 @@
-import { colors } from './assets/colors';
-import { CheckKeyColor, checkWord, renderTitle } from './src/components/Helper';
+import { colors } from './src/utils/colors';
+import { CheckKeyColor, checkWord, renderTitle } from './src/utils/Helper';
 
 describe('CheckKeyColor', () => {
   test('should return correct object with green color if letter matches at correct position', () => {

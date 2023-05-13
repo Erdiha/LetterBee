@@ -3,14 +3,18 @@ import { Text, TouchableOpacity, View, StyleSheet, Modal } from 'react-native';
 import Animated, { BounceInUp } from 'react-native-reanimated';
 
 import ConfettiCannon from 'react-native-confetti-cannon';
-import { colors } from '../../assets/colors';
+import { colors } from '../../utils/colors';
+import { getScoreSum } from '../../utils/Helper';
+import { MAX_ROUND, TOTAL_SCORE } from '../../utils/constants';
 
 function ModalComponent({
   roundIsOver,
   secretWord,
   playerScore,
   roundCount,
-  resetGame,
+  resetRound,
+  setAllGuesses,
+  score,
 }) {
   const [isModalVisible, setModalVisible] = useState(roundIsOver);
   const word = secretWord.join('').toUpperCase();
@@ -64,7 +68,8 @@ function ModalComponent({
                 Score:
               </Text>
               <Text style={styles.scoreText}>
-                {playerScore.current}/{roundCount.current}
+                {TOTAL_SCORE / MAX_ROUND - getScoreSum(playerScore)}/
+                {TOTAL_SCORE / MAX_ROUND}
               </Text>
             </View>
           </View>
@@ -72,8 +77,9 @@ function ModalComponent({
           <TouchableOpacity
             style={styles.closeButton}
             onPress={() => {
-              setModalVisible(!isModalVisible);
-              resetGame();
+              setAllGuesses([]);
+              setModalVisible(!roundIsOver);
+              resetRound();
             }}>
             <Text
               style={{ fontSize: 20, fontWeight: '700', color: colors.light }}>

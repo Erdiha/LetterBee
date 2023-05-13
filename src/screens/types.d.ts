@@ -6,7 +6,7 @@ export type RootStackParamList = {
 
 export interface IPlayer {
   name: string;
-  score: number;
+  info: [];
 }
 
 export interface PlayerScore {
