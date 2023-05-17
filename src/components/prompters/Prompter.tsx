@@ -5,6 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   BackHandler,
+  ToastAndroid,
+  Alert,
 } from 'react-native';
 import Animated, {
   BounceIn,
@@ -12,8 +14,7 @@ import Animated, {
   SlideOutDown,
 } from 'react-native-reanimated';
 import { AntDesign } from '@expo/vector-icons';
-import { colors } from '../../utils/colors';
-import { MAX_ROUND } from '../../utils/constants';
+import { MAX_ROUND, colors } from '../../utils/constants';
 
 const Prompter = ({
   attempt,
@@ -29,34 +30,65 @@ const Prompter = ({
   foundTheWord,
   setGiveup,
   setGameOver,
+  handleRoundIsOver,
 }) => {
+  //handle backspace click to exit game
+
+  const handleExitGame = () => {
+    if (gameOver) {
+      setGameOver(true);
+      handleNewGame();
+      BackHandler.exitApp();
+    } else {
+      Alert.alert('Confirmation', 'Are you sure you want to exit the game?', [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Exit',
+          style: 'destructive',
+          onPress: () => {
+            setGameOver(true);
+            handleNewGame();
+            BackHandler.exitApp();
+          },
+        },
+      ]);
+    }
+  };
+
   useEffect(() => {
     const backAction = () => {
-      BackHandler.exitApp();
-      setGameOver(true);
+      handleExitGame();
       return true;
     };
+
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
       backAction,
     );
+
     return () => backHandler.remove();
   }, []);
 
   const handleButtonPress = () => {
-    if (isGameOver) {
+    if (isGameOver && type === 'gameover') {
       handleNewGame();
     } else {
-      setAllGuesses([]);
-      setGiveup(true);
-      resetRound();
+      if (type === '') {
+        setGiveup(true);
+        setShowInfo(true);
+      } else if (type === 'info') {
+        handleRoundIsOver();
+      }
     }
   };
 
-  console.log('prompter', roundCount.current, attempt, score, secretWord);
+  //bollean to determine game over or not
   const isGameOver = roundCount.current === MAX_ROUND || gameOver;
   const texts = { header: '', body: {} };
-
+  //check info type
   if (!isGameOver) {
     texts.header = 'INFO';
     texts.body['1'] = 'Round: ' + roundCount.current;
@@ -68,8 +100,9 @@ const Prompter = ({
     texts.body['2'] = 'Total Score: ' + score.current;
     texts.body['3'] = `Word was: ${secretWord.join('').toUpperCase()}`;
   }
+  //determine render depending on the info type
   const infoText =
-    type === 'info' ? (
+    type === 'info' || type === '' ? (
       <View
         style={{
           flex: 1,
@@ -149,7 +182,7 @@ const Prompter = ({
       </View>
       <View style={styles.scoreWrapper}>{infoText}</View>
       <View style={styles.controlContainer}>
-        <TouchableOpacity onPress={() => BackHandler.exitApp()}>
+        <TouchableOpacity onPress={handleExitGame}>
           <Text
             style={[
               styles.buttonText,
@@ -158,9 +191,14 @@ const Prompter = ({
             EXIT GAME
           </Text>
         </TouchableOpacity>
+
         <TouchableOpacity onPress={() => handleButtonPress()}>
           <Text style={styles.buttonText}>{`${
-            isGameOver ? 'NEW GAME' : 'GIVE UP'
+            type === 'gameover'
+              ? 'NEW GAME'
+              : type === 'info'
+              ? 'NEXT ROUND'
+              : 'GIVE UP'
           }`}</Text>
         </TouchableOpacity>
       </View>

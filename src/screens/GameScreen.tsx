@@ -18,7 +18,7 @@ import Animated, {
   SlideInUp,
   SlideOutDown,
 } from 'react-native-reanimated';
-import { colors } from '../utils/colors';
+import { colors } from '../utils/constants';
 import Game from '../components/game/Game';
 import Rules from '../utils/Rules';
 
@@ -100,8 +100,9 @@ function GameScreen({ navigation }: GameScreenProps) {
                 styles.buttonText,
                 {
                   color: colors.red,
-                  fontWeight: '800',
+                  fontFamily: 'Ultra-Regular',
                   letterSpacing: 2,
+                  fontSize: 25,
                 },
               ]}>
               RULES
@@ -149,13 +150,10 @@ function GameScreen({ navigation }: GameScreenProps) {
     switch (choice) {
       case 0:
         return chooseGameType();
-
       case 1:
         return renderInputName();
       case 2:
-        return (
-          <Game player={player} setPlayer={setPlayer} navigation={navigation} />
-        );
+        return <Game player={player} setPlayer={setPlayer} />;
       case 3:
         return handleComingSoon();
       case 4:
@@ -195,10 +193,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     elevation: 10,
   },
-  comingSoonText: { color: colors.light, fontSize: 30, fontFamily: 'Roboto' },
+  comingSoonText: {
+    color: colors.light,
+    fontSize: 30,
+    fontFamily: 'Ultra-Regular',
+  },
   buttons: {
     backgroundColor: colors.lightDark,
-    width: 150,
+    width: 200,
     height: 50,
     display: 'flex',
     justifyContent: 'center',
@@ -210,7 +212,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: colors.light,
     fontSize: 20,
-    fontFamily: 'Roboto',
+    fontFamily: 'Ultra-Regular',
   },
   input: {
     borderWidth: 1,

@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { colors } from '../../utils/colors';
+import { colors } from '../../utils/constants';
 import Animated, {
   BounceInLeft,
   BounceOutRight,

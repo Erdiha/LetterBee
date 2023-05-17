@@ -18,7 +18,7 @@ export default function KeyPressRender(
       if (guess.includes('')) {
         return;
       }
-      setAttempt(attempt + 1);
+
       checkWord({ row: guess }).then((result) => {
         if (result || guess.join('') === secretWord.join('').toUpperCase()) {
           setAllGuesses([...allGuesses, guess]);
@@ -30,6 +30,7 @@ export default function KeyPressRender(
 
       setGuess(['', '', '', '', '']);
       setRow(0);
+      setAttempt(attempt + 1);
     } else if (letter === 'backspace') {
       if (row === 0) {
         return;

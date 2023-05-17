@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -6,7 +6,7 @@ import {
   StyleSheet,
   Vibration,
 } from 'react-native';
-import { colors } from '../../utils/colors';
+import { colors } from '../../utils/constants';
 import { keyRows, backspace, enter } from '../../utils/constants';
 import Animated, { BounceIn } from 'react-native-reanimated';
 
@@ -17,6 +17,8 @@ const Keyboard = ({
   gameOver,
   roundIsOver,
 }: any) => {
+  const [activeLetter, setActiveLetter] = useState('');
+
   const enterJSX = <Text style={styles.enter}>ENTER</Text>;
 
   const restJSX = (letter: string | any) => (
@@ -45,16 +47,29 @@ const Keyboard = ({
     }
   };
 
+  const handleLetterPressIn = (letter: any) => {
+    if (letter !== 'ENTER' && letter !== backspace) {
+      setActiveLetter(letter);
+    } else {
+      setActiveLetter('');
+    }
+  };
+
+  const handleLetterPressOut = () => {
+    setActiveLetter('');
+  };
+
   return (
     <View style={styles.container}>
       {keyRows.map((row, rowIndex) => (
         <View style={styles.row} key={rowIndex}>
           {row.map((letter, letterIndex) => (
             <Animated.View
-              entering={BounceIn.delay(letterIndex * 200)}
-              key={letterIndex}>
+              key={letterIndex}
+              entering={BounceIn.delay(letterIndex * 200)}>
               <TouchableOpacity
-                activeOpacity={0.3}
+                delayPressIn={0}
+                activeOpacity={0.1}
                 disabled={foundTheWord || gameOver || roundIsOver}
                 style={[
                   styles.button,
@@ -62,10 +77,16 @@ const Keyboard = ({
                   letter === enter && styles.enterButton,
                   { backgroundColor: keyColors(letter) },
                 ]}
-                key={letterIndex}
-                onPress={() => handlePress(letter)}>
+                onPress={() => handlePress(letter)}
+                onPressIn={() => handleLetterPressIn(letter)}
+                onPressOut={handleLetterPressOut}>
                 {letter === 'ENTER' ? enterJSX : restJSX(letter)}
               </TouchableOpacity>
+              {activeLetter === letter && (
+                <Animated.View style={styles.tooltip}>
+                  <Text style={styles.tooltipText}>{letter}</Text>
+                </Animated.View>
+              )}
             </Animated.View>
           ))}
         </View>
@@ -76,9 +97,14 @@ const Keyboard = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#F0F0F0',
-    padding: 8,
+    backgroundColor: colors.gray,
+    padding: 10,
     borderRadius: 5,
+    position: 'absolute',
+    alignSelf: 'center',
+    paddingHorizontal: 5,
+    elevation: 5,
+    margin: 5,
   },
   row: {
     flexDirection: 'row',
@@ -90,41 +116,54 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     margin: 2,
-    width: 35,
+    width: 36,
     height: 60,
-    borderRadius: 3,
-    borderColor: colors.lightDark,
-    borderWidth: 0.2,
-    elevation: 5,
+    elevation: 7,
+    borderRadius: 6,
   },
   text: {
     fontSize: 30,
-    fontWeight: '400',
+    fontWeight: '500',
     textAlign: 'center',
     textAlignVertical: 'center',
-    color: colors.lightDark,
+    color: colors.lightDark2,
   },
   backspace: {
     width: 45,
-    paddingHorizontal: 8,
   },
   enterButton: {
     backgroundColor: colors.lightDark,
     width: 78,
     height: 60,
-    borderColor: colors.lightDark,
-    borderWidth: 1,
+
     elevation: 6,
   },
   enter: {
     fontSize: 22,
-
     textAlign: 'center',
     textAlignVertical: 'center',
     color: colors.red,
     letterSpacing: 1,
     fontWeight: '900',
     fontFamily: 'sans-serif-condensed',
+  },
+  tooltip: {
+    position: 'absolute',
+    top: -40,
+    left: 5,
+    backgroundColor: colors.lightDark,
+    padding: 5,
+    borderRadius: 5,
+    elevation: 10,
+    width: 35,
+    transition: 'all 2.5s ease',
+  },
+
+  tooltipText: {
+    fontSize: 16,
+    color: colors.light,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 

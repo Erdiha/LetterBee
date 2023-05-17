@@ -1,16 +1,13 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import React from 'react';
-import { colors } from '../utils/colors';
+import { colors } from '../utils/constants';
 import Animated, {
   BounceInDown,
-  BounceInLeft,
-  BounceInRight,
   BounceInUp,
   SlideInUp,
   SlideOutDown,
 } from 'react-native-reanimated';
 import { title, bgColor, rules } from './constants';
-import BounceIn from 'react-native-reanimated';
 const Rules = ({ setStart }) => {
   const handleLetterBee = () => {
     return title.map((char, index) => (
@@ -18,7 +15,7 @@ const Rules = ({ setStart }) => {
         key={index}
         entering={
           index === title.length - 1
-            ? BounceInUp.delay(300).duration(4000)
+            ? BounceInUp.delay(3000).duration(4000)
             : BounceInDown.delay(index * 300).duration(1000)
         }>
         <Text
@@ -27,7 +24,8 @@ const Rules = ({ setStart }) => {
             styles.letterBeeText,
             {
               color: bgColor[index],
-              marginRight: index === title.length - 1 ? 0 : 5,
+              marginRight: index === title.length - 1 ? 0 : 2,
+              fontFamily: 'Ultra-Regular',
             },
           ]}>
           {char}
@@ -41,7 +39,7 @@ const Rules = ({ setStart }) => {
       entering={SlideInUp}
       exiting={SlideOutDown}
       style={styles.rulesContainer}>
-      <Text style={{ fontSize: 25, fontWeight: '800', marginTop: 10 }}>
+      <Text style={{ fontSize: 25, fontWeight: '800', marginBottom: 20 }}>
         WELCOME TO
       </Text>
       <View style={{ display: 'flex', flexDirection: 'row', marginBottom: 20 }}>
@@ -52,16 +50,20 @@ const Rules = ({ setStart }) => {
         {rules.map((char, index) => (
           <Animated.View
             key={index}
-            entering={BounceInDown.delay(index * 500).duration(3000)}>
+            entering={BounceInDown.delay(
+              index === rules.length - 1 ? 8000 : index * 500,
+            ).duration(3000)}>
             <Text
               style={[
                 styles.rulesText,
                 index === rules.length - 1
                   ? {
                       color: colors.yellow,
-                      fontSize: 25,
-                      marginTop: 15,
+                      fontSize: 20,
+                      marginTop: 10,
                       textTransform: 'uppercase',
+                      fontFamily: 'Ultra-Regular',
+                      textAlign: 'center',
                     }
                   : null,
               ]}>
@@ -87,7 +89,6 @@ const styles = StyleSheet.create({
     display: 'flex',
     justifyContent: 'space-around',
     alignItems: 'center',
-
     borderRadius: 10,
     width: '80%',
     height: '80%',
@@ -103,14 +104,15 @@ const styles = StyleSheet.create({
     elevation: 5,
     borderColor: colors.lightDark,
     borderWidth: 1,
+    fontFamily: 'Ultra-Regular',
   },
   rulesText: {
     fontSize: 18,
     lineHeight: 24,
-    marginVertical: 1,
+    marginVertical: 3,
     color: colors.light,
-    fontWeight: '700',
     textAlign: 'center',
+    marginTop: 10,
   },
   rulesTextWrapper: {
     padding: 20,
@@ -127,9 +129,10 @@ const styles = StyleSheet.create({
   buttonText: {
     color: colors.light,
     padding: 10,
-    fontWeight: '700',
-    fontSize: 30,
+    letterSpacing: 2,
+    fontSize: 25,
     width: 150,
     textAlign: 'center',
+    fontFamily: 'Ultra-Regular',
   },
 });

@@ -42,6 +42,7 @@
     "react-native-custom-keyboard": "^1.0.4",
     "react-native-elements": "^3.4.3",
     "react-native-heroicons": "^3.2.0",
+    "react-native-inset-shadow": "^1.0.3",
     "react-native-keyboard-accessory": "^0.1.16",
     "react-native-linear-gradient": "^2.6.2",
     "react-native-modal": "^13.0.1",

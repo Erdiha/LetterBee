@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { colors } from '../utils/colors';
+import { colors } from '../utils/constants';
 import Animation, {
   BounceInLeft,
   BounceInRight,
@@ -18,18 +18,11 @@ import { RootStackParamList } from './types';
 import { title, bgColor, enter } from '../utils/constants';
 import Animated from 'react-native-reanimated';
 import { useFonts } from 'expo-font';
+import { words } from '../utils/data';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
 function HomeScreen({ navigation }: { navigation: HomeScreenNavigationProp }) {
-  let [fontsLoaded] = useFonts({
-    'PermanentMarker-Regular': require('../../assets/fonts/PermanentMarker-Regular.ttf'),
-  });
-
-  if (!fontsLoaded) {
-    return <Text>Loading...</Text>;
-  }
-
   function renderTitle() {
     const red = title.map((letter: string, index: number) => {
       return (
@@ -61,8 +54,7 @@ function HomeScreen({ navigation }: { navigation: HomeScreenNavigationProp }) {
             style={{
               color: colors.light,
               fontSize: 45,
-              fontWeight: 'bold',
-              fontFamily: 'PermanentMarker-Regular',
+              fontFamily: 'Ultra-Regular',
             }}>
             {letter}
           </Text>
@@ -98,6 +90,7 @@ function HomeScreen({ navigation }: { navigation: HomeScreenNavigationProp }) {
               color: 'white',
               fontSize: 30,
               textAlign: 'center',
+              fontFamily: 'Ultra-Regular',
             }}>
             PLAY
           </Text>

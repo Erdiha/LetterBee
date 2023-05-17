@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import React from 'react';
 import { Avatar, Icon } from 'react-native-elements';
-import { colors } from '../../utils/colors';
+import { colors } from '../../utils/constants';
 
 const UserAvatar = ({ player, setShowProfile }) => {
   return (

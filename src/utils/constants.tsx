@@ -1,8 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from './colors';
-
+export const colors = {
+  dark: '#222831',
+  lightDark: '#393E46',
+  lightDark2: '#2B3A55',
+  teal: '#00ADB5',
+  light: '#EEEEEE',
+  yellow: '#F7DB6A',
+  green: '#BEF0CB',
+  gray: '#BDCDD6',
+  red: '#FA9494',
+};
 export const backspace = (
-  <Ionicons name='md-backspace' size={30} color={colors.lightDark} />
+  <Ionicons name='md-backspace' size={30} color={colors.red} />
 );
 export const enter = 'ENTER';
 export const keyRows = [
@@ -13,12 +22,15 @@ export const keyRows = [
 
 export const title = ['L', 'E', 'T', 'T', 'E', 'R', '🐝'];
 export const bgColor = [
-  '#617A55',
-  '#F08A5D',
+  '#98D8AA',
+  '#E57C23',
   '#B83B5E',
   '#6A2C70',
   '#F38181',
+  '#2B3A55',
   '#537188',
+
+  colors.teal,
   colors.light,
 ];
 

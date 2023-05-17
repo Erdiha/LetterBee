@@ -1,4 +1,4 @@
-import { colors } from './colors';
+import { colors } from './constants';
 import { words } from './data';
 import { PlayerScore } from '../screens/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -194,13 +194,32 @@ export function handleScoreDisplay(
   giveupPoints: React.MutableRefObject<number>,
 ) {
   return () => {
-    console.log('allGuesses', allGuesses, 'roundCount', roundCount.current);
+    console.log(
+      'allGuesses',
+      allGuesses,
+      'roundCount',
+      roundCount.current,
+      'attempt',
+      attempt,
+      'playerScore',
+      playerScore.current,
+      'secretWord',
+      secretWord,
+      'score',
+      score.current,
+      'foundTheWord',
+      foundTheWord,
+      'giveup',
+      giveup,
+      'giveupPoints',
+      giveupPoints.current,
+    );
     playerScore.current[roundCount.current] = calculateScore({
       secretWord,
       attempt,
       allGuesses,
     });
-    const totalScore = getScoreSum(playerScore);
+    let totalScore = getScoreSum(playerScore);
 
     score.current = TOTAL_SCORE - totalScore - giveupPoints.current;
 
