@@ -1,6 +1,6 @@
 import { colors } from './constants';
 import { words } from './data';
-import { PlayerScore } from '../screens/types';
+import { IPlayer, PlayerScore } from '../screens/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ToastAndroid } from 'react-native';
 import useScore from '../components/hooks/useScore';
@@ -71,12 +71,6 @@ export const getDate = (): string => {
   return `${date} ${time}`;
 };
 
-export const keyBoardColors = {
-  [colors.yellow]: [],
-  [colors.green]: [],
-  [colors.gray]: [],
-};
-
 export const getSecretWord = () => {
   const randomIndex = Math.floor(Math.random() * words.length);
   return words[randomIndex] ? words[randomIndex].split('') : [];
@@ -96,92 +90,6 @@ export const sortInfoByScore = ({ setPlayer }): void => {
   }));
 };
 
-export const storeData = async (data: any) => {
-  try {
-    if (data.type === 'gameState') {
-      await AsyncStorage.setItem('gameState', JSON.stringify(data.gameState));
-    }
-
-    if (data.type === 'userData') {
-      const storedData = await AsyncStorage.getItem('userData');
-      let newData = [];
-
-      if (storedData) {
-        const existingData = JSON.parse(storedData);
-        const userIndex = existingData.findIndex(
-          (item) => item.name === data.userData.name,
-        );
-
-        if (userIndex !== -1) {
-          existingData[userIndex] = {
-            ...existingData[userIndex],
-            ...data.userData,
-          };
-          newData = existingData;
-        } else {
-          newData = [...existingData, data.userData];
-        }
-      } else {
-        newData = [data.userData];
-      }
-
-      await AsyncStorage.setItem('userData', JSON.stringify(newData));
-    }
-
-    if (data.type === 'score') {
-      await AsyncStorage.setItem('score', JSON.stringify(data.score));
-    }
-  } catch (error) {
-    ToastAndroid.show('Error storing data', ToastAndroid.SHORT);
-  }
-
-  console.log('async data', data);
-};
-
-// To retrieve a value
-export const retrieveData = async ({ userName }: any) => {
-  try {
-    const userData = await AsyncStorage.getItem('userData');
-    const gameState = await AsyncStorage.getItem('gameState');
-
-    if (
-      !userData ||
-      typeof userData !== 'string' ||
-      !gameState ||
-      typeof gameState !== 'string'
-    ) {
-      // Handle the case when data is missing or not a string
-      return null;
-    }
-
-    const parsedUserData = JSON.parse(userData);
-    const user = parsedUserData.find((item: any) => item.name === userName);
-
-    if (user) {
-      console.log('retrieve data user', user);
-      return {
-        userData: user.data,
-        gameState: JSON.parse(gameState),
-      };
-    }
-
-    return null; // User not found
-  } catch (error) {
-    // Handle error
-    ToastAndroid.show('Error retrieving data', ToastAndroid.SHORT);
-    return null; // Return default value or handle the error accordingly
-  }
-};
-
-export const clearAsyncStorage = async () => {
-  try {
-    await AsyncStorage.clear();
-    console.log('AsyncStorage cleared successfully.');
-  } catch (error) {
-    console.error('Error clearing AsyncStorage:', error);
-  }
-};
-
 export function handleScoreDisplay(
   allGuesses: string[][],
   roundCount: React.MutableRefObject<number>,
@@ -189,31 +97,9 @@ export function handleScoreDisplay(
   secretWord: any,
   attempt: number,
   score: React.MutableRefObject<number>,
-  foundTheWord: boolean,
-  giveup: boolean,
   giveupPoints: React.MutableRefObject<number>,
 ) {
   return () => {
-    console.log(
-      'allGuesses',
-      allGuesses,
-      'roundCount',
-      roundCount.current,
-      'attempt',
-      attempt,
-      'playerScore',
-      playerScore.current,
-      'secretWord',
-      secretWord,
-      'score',
-      score.current,
-      'foundTheWord',
-      foundTheWord,
-      'giveup',
-      giveup,
-      'giveupPoints',
-      giveupPoints.current,
-    );
     playerScore.current[roundCount.current] = calculateScore({
       secretWord,
       attempt,

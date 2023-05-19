@@ -9,6 +9,7 @@ export const colors = {
   green: '#BEF0CB',
   gray: '#BDCDD6',
   red: '#FA9494',
+  lightBlue: '#C4DFDF',
 };
 export const backspace = (
   <Ionicons name='md-backspace' size={30} color={colors.red} />
@@ -27,13 +28,12 @@ export const bgColor = [
   '#B83B5E',
   '#6A2C70',
   '#F38181',
-  '#2B3A55',
+  '#C4DFDF',
   '#537188',
 
   colors.teal,
   colors.light,
 ];
-
 const text =
   'This word guessing game has five attempts for each round. Each game has 4 rounds. Each round is worth 50pts, and you start off with 50pts. For each wrong letter, 1pt is deducted, for each right letter but wrong position, 0.5pts are deducted from the 50pts. For each correct letter with the correct position, no points will be taken. If you guess the word on your first attempt, you get the full 50pts. Good Luck';
 
@@ -42,3 +42,10 @@ export const rules = text.split(/\.\s/).map((line) => line.trim() + '.');
 export const TOTAL_SCORE = 150;
 export const MAX_ROUND = 3;
 export const MAX_ATTEMPTS = 5;
+export const ROUND_SCORE = 50;
+
+export const keyBoardColors = {
+  [colors.yellow]: [],
+  [colors.green]: [],
+  [colors.gray]: [],
+};

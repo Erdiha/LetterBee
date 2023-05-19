@@ -14,7 +14,7 @@ import Animated, {
   BounceOutLeft,
 } from 'react-native-reanimated';
 import ConfettiCannon from 'react-native-confetti-cannon';
-import { bgColor, colors, enter } from '../../utils/constants';
+import { ROUND_SCORE, bgColor, colors, enter } from '../../utils/constants';
 import { getScoreSum } from '../../utils/Helper';
 import { MAX_ROUND, TOTAL_SCORE } from '../../utils/constants';
 import BounceIn from 'react-native-reanimated';
@@ -32,12 +32,18 @@ function ModalComponent({
   playerScore,
   handleRoundIsOver,
   setAllGuesses,
+  roundCount,
 }) {
   const [isModalVisible, setModalVisible] = useState(roundIsOver);
 
   const word = 'CONGRATS'.toUpperCase().split('');
+  console.log(
+    'playerScore in modal',
+    playerScore.current[roundCount.current],
+    roundCount,
+  );
 
-  const scoreRemaining = TOTAL_SCORE / MAX_ROUND - getScoreSum(playerScore);
+  const scoreRemaining = ROUND_SCORE - playerScore.current[roundCount.current];
 
   const closeModal = () => {
     setAllGuesses([]);

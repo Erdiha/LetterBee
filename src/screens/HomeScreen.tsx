@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   StyleSheet,
@@ -15,10 +15,8 @@ import Animation, {
   SlideInUp,
 } from 'react-native-reanimated';
 import { RootStackParamList } from './types';
-import { title, bgColor, enter } from '../utils/constants';
+import { title, bgColor } from '../utils/constants';
 import Animated from 'react-native-reanimated';
-import { useFonts } from 'expo-font';
-import { words } from '../utils/data';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 

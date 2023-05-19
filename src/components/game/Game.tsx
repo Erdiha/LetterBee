@@ -1,18 +1,14 @@
 import { View, Text, StyleSheet } from 'react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { words } from '../../utils/data';
-import { colors } from '../../utils/constants';
+import { colors, keyBoardColors } from '../../utils/constants';
 import Keyboard from '../keyboard/Keyboard';
 import Animated, { SlideInUp } from 'react-native-reanimated';
 import { AntDesign } from '@expo/vector-icons';
 import Prompter from '../prompters/Prompter';
 import UserAvatar from '../prompters/UserAvatar';
-import {
-  getDate,
-  handleScoreDisplay,
-  keyBoardColors,
-  storeData,
-} from '../../utils/Helper';
+import { getDate, handleScoreDisplay } from '../../utils/Helper';
+import { getUserData, saveUserData } from '../asyncStorage/index';
 
 import renderGuesses from './RenderGuesses';
 import PlayerData from '../prompters/PlayerData';
@@ -41,8 +37,6 @@ const Game = ({ player, setPlayer }) => {
   const [giveup, setGiveup] = useState(false);
   const giveUpPoints = useRef(0);
 
-  console.log('player', player);
-
   const score = useRef(0);
   const data = {
     allGuesses,
@@ -65,40 +59,21 @@ const Game = ({ player, setPlayer }) => {
     const randomIndex = Math.floor(Math.random() * validWords.length);
     setSecretWord(validWords[randomIndex].split(''));
   };
-  // useEffect(() => {
-  //   async function fetchData() {
-  //     const userData = await retrieveData({ userName: player.name });
 
-  //     if (userData !== null) {
-  //       const { gameState } = userData;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const user = await getUserData(player.name);
+        if (user) {
+          setPlayer(user);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
 
-  //       console.log('usetate retrieve data', gameState, userData);
-
-  //       if (gameState !== null && userData.userData !== undefined) {
-  //         setAllGuesses(gameState.allGuesses);
-  //         setSecretWord(gameState.secretWord);
-  //         setGameOver(gameState.gameOver);
-  //         setRow(gameState.row);
-  //         setCol(gameState.col);
-  //         setFoundTheWord(gameState.foundTheWord);
-  //         setAttempt(gameState.attempt);
-  //         playerScore.current = gameState.playerScore;
-  //         setShowInfo(gameState.showInfo);
-  //         if (userData.userData.name === player.name) {
-  //           setPlayer(userData.userData);
-  //         }
-  //       } else {
-  //         // Handle the case when gameState is null or userData.userData is undefined
-  //         // Perform any necessary actions or set default values
-  //       }
-  //     } else {
-  //       // Handle the case when userData is null
-  //       // Perform any necessary actions or set default values
-  //     }
-  //   }
-
-  //   fetchData();
-  // }, []);
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * validWords.length);
@@ -127,12 +102,21 @@ const Game = ({ player, setPlayer }) => {
       }
     }
     setGiveup(false); // Reset giveup flag
-  }, [attempt, giveup, foundTheWord]); // Include foundTheWord in the dependencies
+  }, [attempt, giveup, foundTheWord]);
 
   const handleRoundIsOver = () => {
     roundCount.current += 1;
     resetRound();
   };
+
+  useEffect(() => {
+    if (gameOver) {
+      player.info.push({ score: score.current, date: getDate() });
+      if (roundCount.current >= 1 && attempt > 0 && allGuesses.length > 0) {
+        saveUserData(player);
+      }
+    }
+  }, [gameOver]);
 
   const resetRound = () => {
     setAllGuesses([]);
@@ -152,11 +136,6 @@ const Game = ({ player, setPlayer }) => {
   };
 
   const handleNewGame = () => {
-    const userData = { score: score.current, date: getDate() };
-    player.info.push(userData);
-    console.log('handle new game', userData, 'player', player);
-    storeData({ userData: player, type: 'userData' });
-    storeData({ gameState: data, type: 'gameState' });
     resetRound();
     setGameOver(false);
     roundCount.current = 1;
@@ -230,8 +209,6 @@ const Game = ({ player, setPlayer }) => {
                 secretWord,
                 attempt,
                 score,
-                foundTheWord,
-                giveup,
                 giveUpPoints,
               )()}
             </Animated.Text>
@@ -266,9 +243,7 @@ const Game = ({ player, setPlayer }) => {
       <View style={styles.guessRow}>
         {guess?.map((letter, index) => {
           const isCurrentRow = row === index;
-          const scale = isCurrentRow && !foundTheWord ? 1.05 : 0.9;
-          const borderColor =
-            isCurrentRow && !foundTheWord ? colors.green : 'transparent';
+          const scale = isCurrentRow && !foundTheWord ? 1.05 : 0.8;
 
           return (
             <Animated.View key={index} style={styles.guessCell}>
@@ -276,8 +251,18 @@ const Game = ({ player, setPlayer }) => {
                 containerStyle={{
                   ...styles.shadow,
                   transform: [{ scale: roundIsOver ? 0.95 : scale }],
-                  borderColor: isCurrentRow ? 'green' : 'transparent',
-                  backgroundColor: foundTheWord ? colors.green : 'transparent',
+                  borderColor: 'transparent',
+                  backgroundColor: foundTheWord
+                    ? colors.green
+                    : roundIsOver
+                    ? !foundTheWord
+                      ? 'transparent'
+                      : colors.lightBlue
+                    : isCurrentRow
+                    ? colors.lightBlue
+                    : 'transparent',
+
+                  zIndex: isCurrentRow ? 100 : 1,
                 }}
                 shadowColor={isCurrentRow ? 'green' : 'black'}
                 elevation={6}
@@ -298,6 +283,7 @@ const Game = ({ player, setPlayer }) => {
             playerScore={playerScore}
             setAllGuesses={setAllGuesses}
             handleRoundIsOver={handleRoundIsOver}
+            roundCount={roundCount}
           />
         </View>
       ) : (
@@ -324,7 +310,7 @@ const Game = ({ player, setPlayer }) => {
       </View>
       <>
         {showInfo && proptUser()}
-        {showProfile && PlayerData({ player, setShowProfile, setPlayer })}
+        {showProfile && PlayerData({ player, setShowProfile })}
       </>
     </View>
   );
@@ -386,6 +372,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 100,
   },
 
   letter: {

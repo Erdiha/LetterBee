@@ -97,7 +97,7 @@ const Keyboard = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.gray,
+    backgroundColor: colors.lightBlue,
     padding: 10,
     borderRadius: 5,
     position: 'absolute',

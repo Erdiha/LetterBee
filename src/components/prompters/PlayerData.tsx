@@ -4,41 +4,15 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  ToastAndroid,
 } from 'react-native';
-import React, { useEffect, useMemo, useRef } from 'react';
-
+import React from 'react';
 import { colors } from '../../utils/constants';
 import Animated, {
   BounceInLeft,
   BounceOutRight,
 } from 'react-native-reanimated';
-import { clearAsyncStorage, retrieveData } from '../../utils/Helper';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-const PlayerData = ({ player, setShowProfile, setPlayer }) => {
-  // Example usage within an async function
-
-  // Example usage within an async function
-  // Example usage within an async function
-  async function clearStorage() {
-    try {
-      await AsyncStorage.clear();
-      ToastAndroid.show('Data cleared successfully', ToastAndroid.SHORT);
-      console.log('AsyncStorage cleared successfully.');
-      // Clear player info after clearing AsyncStorage
-      setPlayer((prevPlayer: object) => ({
-        ...prevPlayer,
-        info: [],
-      }));
-    } catch (error) {
-      console.error('Error clearing AsyncStorage:', error);
-      // Handle error
-    }
-  }
-
-  // Call the clearStorage function
-
-  console.log('playerdata', player);
+import { clearAsyncStorage } from '../asyncStorage';
+const PlayerData = ({ player, setShowProfile }) => {
   return (
     <Animated.View
       entering={BounceInLeft}
@@ -65,24 +39,31 @@ const PlayerData = ({ player, setShowProfile, setPlayer }) => {
 
         <ScrollView style={styles.scoresContainer}>
           <Text style={styles.scoresTitle}>Scores:</Text>
-          {player?.info?.map(
-            (item: any, index: number) =>
-              item && (
-                <Text
-                  key={index}
-                  style={[
-                    styles.scoreText,
-                    index === 0 ? styles.firstScoreText : {},
-                  ]}>
-                  {`#${index + 1} - Score: ${item.score}, Date:${item.date} `}
-                </Text>
-              ),
-          )}
+          {player?.info
+            ?.sort((a: any, b: any) => b.score - a.score) // Sort the items based on the score in descending order
+            .map((item: any, index: number) => {
+              if (item) {
+                return (
+                  <Text
+                    key={index}
+                    style={[
+                      styles.scoreText,
+                      index === 0 ? styles.firstScoreText : {},
+                    ]}>
+                    {`#${index + 1} - Score: ${item.score}, Date: ${
+                      item.date
+                    } `}
+                  </Text>
+                );
+              } else {
+                return null;
+              }
+            })}
         </ScrollView>
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            onPress={() => clearStorage()}
+            onPress={() => clearAsyncStorage()}
             style={styles.clearButton}>
             <Text style={styles.clearButtonText}>CLEAR DATA</Text>
           </TouchableOpacity>
