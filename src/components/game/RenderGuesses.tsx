@@ -45,7 +45,6 @@ const renderGuesses = ({
               keyBoardColors[color].push(key);
 
               if (correctpos.current === 5) {
-                setGuess(allGuesses[allGuesses.length - 1]);
                 setFoundTheWord(true);
                 setRoundIsOver(true);
               }
@@ -58,14 +57,15 @@ const renderGuesses = ({
                   }
                   exiting={BounceOut.delay(300 * cellIndex)}
                   key={cellIndex}
-                  style={styles.guessCell}>
+                  style={[
+                    styles.guessCell,
+                    { backgroundColor: letter === '?' ? colors.red : color },
+                  ]}>
                   <InsetShadow
                     containerStyle={{
                       ...styles.shadow,
                       borderColor: letter === '?' ? colors.red : color,
-                      backgroundColor: letter === '?' ? colors.red : color,
                     }}
-                    shadowRadius={40}
                     elevation={5}
                     shadowOpacity={1}
                     color={colors.lightDark}>
@@ -84,12 +84,12 @@ export default renderGuesses;
 
 const styles = StyleSheet.create({
   shadow: {
-    borderRadius: 1,
+    borderRadius: 10,
     width: 70,
     height: 70,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 10,
+    borderWidth: 13,
   },
   headerText: {
     fontSize: 30,
@@ -105,18 +105,20 @@ const styles = StyleSheet.create({
   },
   guessedWordsContainer: {
     flex: 1,
-    margin: 10,
-    padding: 1,
-    borderRadius: 8,
+    backgroundColor: '#F8F6F4',
+    paddingHorizontal: 10,
+    paddingTop: 15,
   },
   guessRow: {
     flex: 1 / 5,
-
     flexDirection: 'row',
     display: 'flex',
     width: '98%',
     alignSelf: 'center',
-    elevation: 10,
+    elevation: 15,
+    backgroundColor: colors.light,
+    margin: 2,
+    borderRadius: 10,
   },
 
   guessCell: {
@@ -125,11 +127,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 3,
     elevation: 5,
+    borderRadius: 10,
   },
 
   letter: {
     color: colors.lightDark,
     fontSize: 28,
     fontFamily: 'Ultra-Regular',
+    elevation: 10,
   },
 });

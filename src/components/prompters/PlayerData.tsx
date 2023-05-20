@@ -4,15 +4,48 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  ToastAndroid,
+  Alert,
 } from 'react-native';
-import React from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
+
 import { colors } from '../../utils/constants';
 import Animated, {
   BounceInLeft,
   BounceOutRight,
 } from 'react-native-reanimated';
 import { clearAsyncStorage } from '../asyncStorage';
-const PlayerData = ({ player, setShowProfile }) => {
+
+interface PlayerInfo {
+  score: number;
+  date: string;
+  // Other properties
+}
+interface Player {
+  info?: PlayerInfo[];
+  // Other properties
+}
+const PlayerData = ({ player, setShowProfile, setPlayer }) => {
+  const handleAsyncStorageClear = () => {
+    Alert.alert('Confirmation', 'Are you sure you want to delete all data?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          await clearAsyncStorage();
+          setPlayer((prevPlayer: object) => ({
+            ...prevPlayer,
+            info: [],
+          }));
+        },
+      },
+    ]);
+  };
+
   return (
     <Animated.View
       entering={BounceInLeft}
@@ -40,30 +73,29 @@ const PlayerData = ({ player, setShowProfile }) => {
         <ScrollView style={styles.scoresContainer}>
           <Text style={styles.scoresTitle}>Scores:</Text>
           {player?.info
-            ?.sort((a: any, b: any) => b.score - a.score) // Sort the items based on the score in descending order
-            .map((item: any, index: number) => {
-              if (item) {
-                return (
-                  <Text
-                    key={index}
-                    style={[
-                      styles.scoreText,
-                      index === 0 ? styles.firstScoreText : {},
-                    ]}>
-                    {`#${index + 1} - Score: ${item.score}, Date: ${
-                      item.date
-                    } `}
-                  </Text>
-                );
-              } else {
-                return null;
-              }
-            })}
+            ?.sort((a: PlayerInfo, b: PlayerInfo) => b.score - a.score) // Sort scores in descending order
+            ?.map((item: PlayerInfo, index: number) =>
+              item ? (
+                <Text
+                  key={index}
+                  style={[
+                    index === 0
+                      ? styles.firstScoreText
+                      : index === 1
+                      ? [styles.firstScoreText, { fontSize: 18 }]
+                      : index === 2
+                      ? [styles.firstScoreText, { fontSize: 17 }]
+                      : styles.scoreText,
+                  ]}>
+                  {`#${index + 1} - Score: ${item.score}, ${item.date} `}
+                </Text>
+              ) : null,
+            )}
         </ScrollView>
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            onPress={() => clearAsyncStorage()}
+            onPress={() => handleAsyncStorageClear()}
             style={styles.clearButton}>
             <Text style={styles.clearButtonText}>CLEAR DATA</Text>
           </TouchableOpacity>
@@ -110,8 +142,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 10,
     backgroundColor: colors.light,
-    margin: 20,
-    width: '90%',
+    marginVertical: 20,
+    width: '95%',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -136,7 +168,13 @@ const styles = StyleSheet.create({
   },
 
   firstScoreText: {
-    fontSize: 16,
+    color: colors.dark,
+    fontSize: 19,
+    fontWeight: '800',
+    borderColor: colors.red,
+    borderWidth: 2,
+    margin: 2,
+    paddingHorizontal: 1,
   },
 
   clearButton: {
@@ -195,6 +233,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     color: '#000',
     fontSize: 16,
+    margin: 2,
   },
 });
 

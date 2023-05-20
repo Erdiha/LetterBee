@@ -8,7 +8,8 @@ import {
 } from 'react-native';
 import { colors } from '../../utils/constants';
 import { keyRows, backspace, enter } from '../../utils/constants';
-import Animated, { BounceIn } from 'react-native-reanimated';
+import Animated, { BounceIn, BounceOut } from 'react-native-reanimated';
+import InsetShadow from 'react-native-inset-shadow';
 
 const Keyboard = ({
   onPress,
@@ -60,7 +61,14 @@ const Keyboard = ({
   };
 
   return (
-    <View style={styles.container}>
+    <InsetShadow
+      shadowOffset={30}
+      shadowRadius={30}
+      elevation={6}
+      shadowOpacity={1}
+      containerStyle={{
+        ...styles.container,
+      }}>
       {keyRows.map((row, rowIndex) => (
         <View style={styles.row} key={rowIndex}>
           {row.map((letter, letterIndex) => (
@@ -83,7 +91,7 @@ const Keyboard = ({
                 {letter === 'ENTER' ? enterJSX : restJSX(letter)}
               </TouchableOpacity>
               {activeLetter === letter && (
-                <Animated.View style={styles.tooltip}>
+                <Animated.View entering={BounceOut} style={styles.tooltip}>
                   <Text style={styles.tooltipText}>{letter}</Text>
                 </Animated.View>
               )}
@@ -91,20 +99,19 @@ const Keyboard = ({
           ))}
         </View>
       ))}
-    </View>
+    </InsetShadow>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.lightBlue,
-    padding: 10,
-    borderRadius: 5,
+    backgroundColor: '#F8F6F4',
     position: 'absolute',
     alignSelf: 'center',
-    paddingHorizontal: 5,
-    elevation: 5,
-    margin: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+
+    paddingHorizontal: 10,
   },
   row: {
     flexDirection: 'row',
@@ -149,7 +156,7 @@ const styles = StyleSheet.create({
   },
   tooltip: {
     position: 'absolute',
-    top: -40,
+    top: -20,
     left: 5,
     backgroundColor: colors.lightDark,
     padding: 5,

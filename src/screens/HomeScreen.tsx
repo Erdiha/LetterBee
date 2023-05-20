@@ -34,12 +34,16 @@ function HomeScreen({ navigation }: { navigation: HomeScreenNavigationProp }) {
             position: 'absolute',
             justifyContent: 'flex-end',
             alignItems: 'center',
-            backgroundColor: bgColor[index],
+            backgroundColor:
+              index === title.length - 1 ? colors.light : bgColor[index],
             margin: 2,
             borderRadius: index === title.length - 1 ? 50 : 0,
             width: 100,
-            elevation: 5,
-            paddingBottom: index === title.length - 1 ? 20 : 0,
+            elevation: index === title.length - 1 ? 0 : 5,
+            // paddingBottom: index === title.length - 1 ? 20 : 0,
+            borderBottomColor:
+              index === title.length - 1 ? colors.lightDark : '',
+            borderBottomWidth: index === title.length - 1 ? 2 : 0,
             top: 90,
             zIndex: title.length - index,
             bottom:

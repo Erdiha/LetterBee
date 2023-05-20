@@ -1,10 +1,9 @@
-import { colors } from './constants';
+import { colors, TOTAL_SCORE } from './constants';
 import { words } from './data';
-import { IPlayer, PlayerScore } from '../screens/types';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ToastAndroid } from 'react-native';
-import useScore from '../components/hooks/useScore';
-import { TOTAL_SCORE } from './constants';
+import { PlayerScore } from '../screens/types';
+//score calculation
+export const POINTS_PER_GRAY_LETTER = 2;
+export const POINTS_PER_YELLOW_LETTER = 0.5;
 
 export const CheckKeyColor = ({
   letter,
@@ -28,7 +27,7 @@ export const CheckKeyColor = ({
   }
 };
 
-const validateGuess = async ({ row }) => {
+export const validateGuess = async ({ row }) => {
   const w = row.join('').toLowerCase();
   let data = null;
   try {
@@ -95,28 +94,27 @@ export function handleScoreDisplay(
   roundCount: React.MutableRefObject<number>,
   playerScore: React.MutableRefObject<{ 1: number; 2: number; 3: number }>,
   secretWord: any,
-  attempt: number,
+
   score: React.MutableRefObject<number>,
-  giveupPoints: React.MutableRefObject<number>,
+
+  giveUpPoints: React.MutableRefObject<number>,
 ) {
   return () => {
     playerScore.current[roundCount.current] = calculateScore({
       secretWord,
-      attempt,
+
       allGuesses,
     });
     let totalScore = getScoreSum(playerScore);
 
-    score.current = TOTAL_SCORE - totalScore - giveupPoints.current;
+    score.current = TOTAL_SCORE - totalScore - giveUpPoints.current;
 
     return score.current;
   };
 }
-//score calculation
-const POINTS_PER_GRAY_LETTER = 2;
-const POINTS_PER_YELLOW_LETTER = 0.5;
 
-export const calculateScore = ({ secretWord, allGuesses, attempt }) => {
+export const calculateScore = ({ secretWord, allGuesses }) => {
+  console.log('secretword', secretWord);
   const countColors = () => {
     const colors = {
       gray: 0,

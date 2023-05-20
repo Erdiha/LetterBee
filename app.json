@@ -11,9 +11,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*", "assets/*"],
     "ios": {
       "supportsTablet": true
     },
@@ -23,6 +21,7 @@
         "backgroundColor": "#ffffff"
       }
     },
+
     "web": {
       "favicon": ""
     }

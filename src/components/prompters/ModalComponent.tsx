@@ -1,25 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Text, TouchableOpacity, View, StyleSheet, Modal } from 'react-native';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
   Easing,
-  interpolate,
   BounceInUp,
   ZoomInEasyDown,
-  FadeOutDown,
-  FlipOutYRight,
   FlipInYLeft,
   BounceOutLeft,
 } from 'react-native-reanimated';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { ROUND_SCORE, bgColor, colors, enter } from '../../utils/constants';
-import { getScoreSum } from '../../utils/Helper';
 import { MAX_ROUND, TOTAL_SCORE } from '../../utils/constants';
-import BounceIn from 'react-native-reanimated';
-import { useFonts } from 'expo-font';
-import * as SplashScreen from 'expo-splash-screen';
 
 const randomColor = () => {
   const randomIndex = Math.floor(Math.random() * bgColor.length);
@@ -28,20 +18,17 @@ const randomColor = () => {
 
 function ModalComponent({
   roundIsOver,
-  secretWord,
-  playerScore,
   handleRoundIsOver,
+  secretWord,
+
   setAllGuesses,
+
+  playerScore,
   roundCount,
 }) {
   const [isModalVisible, setModalVisible] = useState(roundIsOver);
 
   const word = 'CONGRATS'.toUpperCase().split('');
-  console.log(
-    'playerScore in modal',
-    playerScore.current[roundCount.current],
-    roundCount,
-  );
 
   const scoreRemaining = ROUND_SCORE - playerScore.current[roundCount.current];
 

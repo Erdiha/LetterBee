@@ -25,15 +25,28 @@ const Prompter = ({
   handleNewGame,
   gameOver,
   score,
-  resetRound,
-  setAllGuesses,
-  foundTheWord,
   setGiveup,
   setGameOver,
   handleRoundIsOver,
 }) => {
-  //handle backspace click to exit game
+  useEffect(() => {
+    const backAction = () => {
+      handleExitGame();
+      return true;
+    };
 
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, []);
+  //handle backspace click to exit game
+  //bollean to determine game over or not
+  const isGameOver = roundCount.current === MAX_ROUND || gameOver;
+  const texts = { header: '', body: {} };
+  //handle backspace click to exit game
   const handleExitGame = () => {
     if (gameOver) {
       setGameOver(true);
@@ -49,7 +62,6 @@ const Prompter = ({
           text: 'Exit',
           style: 'destructive',
           onPress: () => {
-            setGameOver(true);
             handleNewGame();
             BackHandler.exitApp();
           },
@@ -57,20 +69,6 @@ const Prompter = ({
       ]);
     }
   };
-
-  useEffect(() => {
-    const backAction = () => {
-      handleExitGame();
-      return true;
-    };
-
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      backAction,
-    );
-
-    return () => backHandler.remove();
-  }, []);
 
   const handleButtonPress = () => {
     if (isGameOver && type === 'gameover') {
@@ -85,11 +83,8 @@ const Prompter = ({
     }
   };
 
-  //bollean to determine game over or not
-  const isGameOver = roundCount.current === MAX_ROUND || gameOver;
-  const texts = { header: '', body: {} };
   //check info type
-  if (!isGameOver) {
+  if (!gameOver) {
     texts.header = 'INFO';
     texts.body['1'] = 'Round: ' + roundCount.current;
     texts.body['2'] = 'Attempts: ' + attempt;
@@ -100,6 +95,7 @@ const Prompter = ({
     texts.body['2'] = 'Total Score: ' + score.current;
     texts.body['3'] = `Word was: ${secretWord.join('').toUpperCase()}`;
   }
+
   //determine render depending on the info type
   const infoText =
     type === 'info' || type === '' ? (
