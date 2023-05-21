@@ -1,33 +1,34 @@
 import { ToastAndroid } from 'react-native';
-import { IPlayer } from '../../screens/types';
+import { Iinfo } from '../../screens/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const saveUserData = async (user: IPlayer): Promise<void> => {
+export const saveUserData = async (scores: Iinfo[]): Promise<void> => {
   try {
-    const data = await AsyncStorage.getItem(user.name);
-    let existingData: IPlayer | null = null;
+    const data = await AsyncStorage.getItem('scores');
+    let existingData: any[] = [];
 
     if (data) {
       existingData = JSON.parse(data);
     }
 
-    const mergedData = existingData
-      ? [...existingData.info, ...user.info]
-      : user.info;
+    const existingIds = new Set(existingData.map((item) => item.id));
 
-    const updatedData: IPlayer = { name: user.name, info: mergedData };
+    const mergedData = scores.filter((item) => !existingIds.has(item.id));
 
-    await AsyncStorage.setItem(user.name, JSON.stringify(updatedData));
+    const updatedData: Iinfo[] = [...existingData, ...mergedData];
+
+    await AsyncStorage.setItem('scores', JSON.stringify(updatedData));
   } catch (error) {
     ToastAndroid.show('Error saving user data', ToastAndroid.SHORT);
   }
 };
-//retrieve the data
-export const getUserData = async (name: string): Promise<IPlayer | null> => {
+
+// Retrieve the data
+export const getUserData = async (): Promise<Iinfo | null> => {
   try {
-    const data = await AsyncStorage.getItem(name);
+    const data = await AsyncStorage.getItem('scores');
     if (data) {
-      const userData: IPlayer = JSON.parse(data);
+      const userData: Iinfo = JSON.parse(data);
       return userData;
     } else {
       return null;
@@ -37,6 +38,7 @@ export const getUserData = async (name: string): Promise<IPlayer | null> => {
     throw error;
   }
 };
+
 export const clearAsyncStorage = async () => {
   try {
     await AsyncStorage.clear();

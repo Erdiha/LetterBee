@@ -3,13 +3,16 @@ export type RootStackParamList = {
   Game: undefined;
   // add other screens here
 };
-
 export interface IPlayer {
   name: string;
-  info: {
-    date: string;
-    score: number;
-  }[];
+  info: Iinfo[];
+}
+
+export interface Iinfo {
+  date: string;
+  score: number;
+  id: string;
+  playerName: string;
 }
 
 export interface PlayerScore {
@@ -17,6 +20,14 @@ export interface PlayerScore {
   2: number;
   3: number;
 }
+export type LeaderBoardProps = {
+  player: {
+    info: Iinfo[];
+    name?: string;
+  };
+  setShowProfile: (value: (prev: boolean) => boolean) => void;
+  setPlayer: (value: object) => void;
+};
 
 export interface IData {
   allGuesses: string[][];

@@ -11,23 +11,20 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import { ROUND_SCORE, bgColor, colors, enter } from '../../utils/constants';
 import { MAX_ROUND, TOTAL_SCORE } from '../../utils/constants';
 
-const randomColor = () => {
-  const randomIndex = Math.floor(Math.random() * bgColor.length);
-  return bgColor[randomIndex];
-};
+// const randomColor = () => {
+//   const randomIndex = Math.floor(Math.random() * bgColor.length);
+//   return bgColor[randomIndex];
+// };
 
 function ModalComponent({
   roundIsOver,
   handleRoundIsOver,
   secretWord,
-
   setAllGuesses,
-
   playerScore,
   roundCount,
+  onClose,
 }) {
-  const [isModalVisible, setModalVisible] = useState(roundIsOver);
-
   const word = 'CONGRATS'.toUpperCase().split('');
 
   const scoreRemaining = ROUND_SCORE - playerScore.current[roundCount.current];
@@ -36,11 +33,11 @@ function ModalComponent({
     setAllGuesses([]);
     handleRoundIsOver();
     setTimeout(() => {
-      setModalVisible(!roundIsOver);
+      onClose(); // Call the onClose function passed via props
     }, 1000);
   };
   return (
-    <Modal transparent={true} animationType='none' visible={isModalVisible}>
+    <Modal transparent={true} animationType='none' visible={roundIsOver}>
       <Animated.View
         entering={FlipInYLeft}
         exiting={BounceOutLeft}

@@ -11,6 +11,9 @@ import Animated, {
   SlideOutRight,
   ZoomInDown,
   BounceOut,
+  SlideOutDown,
+  FadeOut,
+  SlideOutLeft,
 } from 'react-native-reanimated';
 import { CheckKeyColor } from '../../utils/Helper';
 
@@ -31,7 +34,11 @@ const renderGuesses = ({
         return (
           <Animated.View
             entering={SlideInLeft}
-            exiting={SlideOutRight}
+            exiting={
+              rowIndex % 2 === 0
+                ? SlideOutRight.delay(200 * rowIndex)
+                : SlideOutLeft.delay(200 * rowIndex)
+            }
             key={rowIndex}
             style={[styles.guessRow]}>
             {row.map((letter: string, cellIndex: number) => {
@@ -55,7 +62,6 @@ const renderGuesses = ({
                       ? ZoomInDown.delay(250 * cellIndex)
                       : FlipInEasyX.delay(250 * cellIndex)
                   }
-                  exiting={BounceOut.delay(300 * cellIndex)}
                   key={cellIndex}
                   style={[
                     styles.guessCell,

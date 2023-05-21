@@ -35,7 +35,7 @@ export const bgColor = [
   colors.light,
 ];
 const text =
-  'This word guessing game has five attempts for each round. Each game has 4 rounds. Each round is worth 50pts, and you start off with 50pts. For each wrong letter, 1pt is deducted, for each right letter but wrong position, 0.5pts are deducted from the 50pts. For each correct letter with the correct position, no points will be taken. If you guess the word on your first attempt, you get the full 50pts. Good Luck';
+  'In this word guessing game, you have five attempts per round. The game consists of a total of three rounds. At the start of each round, you begin with 50 points. During each round, you can earn up to 50 points. However, points will be deducted based on your guesses. Incorrectly guessing a letter will result in a deduction of 1 point from your total score. If you guess a letter correctly but it is in the wrong position, 0.5 points will be deducted from the initial 50 points. However, if you correctly guess a letter and its position, no points will be deducted. If you manage to guess the word correctly on your first attempt, you will earn the full 50 points for that round. Good Luck!';
 
 export const rules = text.split(/\.\s/).map((line) => line.trim() + '.');
 

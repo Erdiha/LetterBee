@@ -8,7 +8,7 @@ import {
   TextInput,
   ToastAndroid,
 } from 'react-native';
-import { RootStackParamList } from './types';
+import { RootStackParamList, IPlayer, Iinfo } from './types';
 import Animated, {
   BounceOutDown,
   FadeInUp,
@@ -23,11 +23,6 @@ import Game from '../components/game/Game';
 import Rules from '../utils/Rules';
 
 type GameScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Game'>;
-
-interface IPlayer {
-  name: string;
-  info: [];
-}
 
 interface GameScreenProps {
   navigation: GameScreenNavigationProp;
@@ -49,11 +44,10 @@ function GameScreen({ navigation }: GameScreenProps) {
     if (text.trim() !== '' && regex.test(text)) {
       setPlayer((prevPlayer) => ({ ...prevPlayer, name: text }));
       setIsValidInput(true);
-      console.log('Valid input:', text);
     } else {
       setPlayer((prevPlayer) => ({ ...prevPlayer, name: text }));
       setIsValidInput(false);
-      console.log('Invalid input:', text);
+      ToastAndroid.show('Invalid input', ToastAndroid.SHORT);
     }
   };
 

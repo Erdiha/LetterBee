@@ -1,4 +1,10 @@
-import { View, Text, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ToastAndroid,
+  TouchableOpacity,
+} from 'react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { words } from '../../utils/data';
 import { colors, keyBoardColors } from '../../utils/constants';
@@ -6,14 +12,15 @@ import Keyboard from '../keyboard/Keyboard';
 import Prompter from '../prompters/Prompter';
 import { getDate } from '../../utils/Helper';
 import { getUserData, saveUserData } from '../asyncStorage/index';
-
 import renderGuesses from './RenderGuesses';
-import PlayerData from '../prompters/PlayerData';
+import PlayerData from '../prompters/LeaderBoard';
 import KeyPressRender from './KeyPressRender';
 import { MAX_ATTEMPTS, MAX_ROUND, TOTAL_SCORE } from '../../utils/constants';
 import ModalComponent from '../prompters/ModalComponent';
 import GameBanner from './GameBanner';
 import GuessContainer from './GuessContainer';
+import { round } from 'react-native-reanimated';
+import uuid from 'react-native-uuid';
 
 const Game = ({ player, setPlayer }) => {
   const validWords = words;
@@ -24,83 +31,82 @@ const Game = ({ player, setPlayer }) => {
   const [guess, setGuess] = useState(['', '', '', '', '']);
   const [row, setRow] = useState(0);
   const [col, setCol] = useState(0);
+
   const [foundTheWord, setFoundTheWord] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const roundCount = useRef(1);
   const [showInfo, setShowInfo] = useState(false);
   const [info, setInfo] = useState('');
   const playerScore = useRef({ 1: 0, 2: 0, 3: 0 });
-  const [showProfile, setShowProfile] = useState(false);
+  const [showProfile, setShowProfile] = useState<boolean>(false);
   const [roundIsOver, setRoundIsOver] = useState(false);
   const [giveup, setGiveup] = useState(false);
   const giveUpPoints = useRef(0);
   const score = useRef(0);
+  const saveData = useRef(true);
 
   const newWord = () => {
     const randomIndex = Math.floor(Math.random() * validWords.length);
     setSecretWord(validWords[randomIndex].split(''));
   };
-  console.log('allguesses', allGuesses);
 
   useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * validWords.length);
+    setSecretWord(validWords[randomIndex].split(''));
     const fetchData = async () => {
       try {
-        const user = await getUserData(player.name);
-        if (user) {
-          setPlayer(user);
+        const savedData = await getUserData();
+        if (savedData) {
+          setPlayer({ ...player, info: savedData });
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
       }
     };
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const randomIndex = Math.floor(Math.random() * validWords.length);
-    setSecretWord(validWords[randomIndex].split(''));
-  }, []);
+  const handleSaveScores = () => {
+    player.info.push({
+      id: uuid.v4(),
+      score: score.current,
+      date: getDate(),
+      playerName: player?.name,
+    });
+    saveUserData(player.info);
+    saveData.current = false;
+  };
 
   useEffect(() => {
     if (roundCount.current === MAX_ROUND + 1) {
       setGameOver(true);
+      saveData.current && handleSaveScores();
       setInfo('gameover');
-      setShowInfo(true);
-    } else {
-      if (giveup) {
-        giveUpPoints.current += (MAX_ATTEMPTS - attempt) * 10;
-        setInfo('');
-        setRoundIsOver(true);
-        handleRoundIsOver();
-      } else if (foundTheWord) {
-        setGuess(secretWord);
-        setRoundIsOver(true);
-      } else if (attempt === MAX_ATTEMPTS) {
-        if (foundTheWord) {
-          setGuess(secretWord);
-          setRoundIsOver(true);
-        } else {
-          setGuess(secretWord);
-          setInfo('info');
-          setRoundIsOver(true);
+      setTimeout(() => {
+        setShowInfo(true);
+      }, 1000);
+    } else if (giveup) {
+      giveUpPoints.current += (MAX_ATTEMPTS - attempt) * 10;
+      setInfo('');
+      setRoundIsOver(true);
+      handleRoundIsOver();
+    } else if (attempt === MAX_ATTEMPTS || foundTheWord) {
+      setGuess(secretWord);
+      setRoundIsOver(true);
+      if (!foundTheWord) {
+        setInfo('info');
+        setTimeout(() => {
           setShowInfo(true);
-        }
+        }, 1000);
       }
     }
     setGiveup(false); // Reset giveup flag
-  }, [attempt, giveup, foundTheWord]);
+  }, [attempt, giveup, foundTheWord, secretWord]);
 
   const handleRoundIsOver = () => {
     roundCount.current += 1;
     resetRound();
   };
-
-  useEffect(() => {
-    if (gameOver) {
-      player.info.push({ score: score.current, date: getDate() });
-      saveUserData(player);
-    }
-  }, [gameOver]);
 
   const resetRound = () => {
     setAllGuesses([]);
@@ -120,16 +126,17 @@ const Game = ({ player, setPlayer }) => {
   };
 
   const handleNewGame = () => {
-    resetRound();
     setGameOver(false);
+
     roundCount.current = 1;
     playerScore.current = { 1: 0, 2: 0, 3: 0 };
     for (let key in keyBoardColors) {
       keyBoardColors[key] = [];
     }
-    setAllGuesses([]);
     score.current = TOTAL_SCORE;
     giveUpPoints.current = 0;
+    resetRound();
+    saveData.current = true;
   };
 
   const onPress = KeyPressRender(
@@ -161,6 +168,9 @@ const Game = ({ player, setPlayer }) => {
       />
     );
   };
+  const handleModalClose = () => {
+    setRoundIsOver(false);
+  };
   return (
     <View style={styles.gameWrapper}>
       <GameBanner
@@ -176,6 +186,7 @@ const Game = ({ player, setPlayer }) => {
         showInfo={showInfo}
         player={player}
       />
+
       <GuessContainer
         guess={guess}
         row={row}
@@ -191,6 +202,7 @@ const Game = ({ player, setPlayer }) => {
             handleRoundIsOver={handleRoundIsOver}
             secretWord={secretWord}
             setAllGuesses={setAllGuesses}
+            onClose={handleModalClose}
           />
         </View>
       ) : (

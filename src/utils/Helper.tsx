@@ -4,6 +4,7 @@ import { PlayerScore } from '../screens/types';
 //score calculation
 export const POINTS_PER_GRAY_LETTER = 2;
 export const POINTS_PER_YELLOW_LETTER = 0.5;
+import { Audio } from 'expo-av';
 
 export const CheckKeyColor = ({
   letter,
@@ -138,11 +139,9 @@ export const calculateScore = ({ secretWord, allGuesses }) => {
     }
     return colors;
   };
-
   const colors = countColors();
   const attemptPoints =
     colors.gray * POINTS_PER_GRAY_LETTER +
     colors.yellow * POINTS_PER_YELLOW_LETTER;
-
   return attemptPoints;
 };

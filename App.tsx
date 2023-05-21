@@ -19,7 +19,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App(): JSX.Element {
   const [fontsLoaded] = useFonts({
-    'Ultra-Regular': require('./assets/fonts/Ultra-Regular.ttf'),
+    'Ultra-Regular': require('./src/assets/fonts/Ultra-Regular.ttf'),
   });
 
   const onLayoutRootView = useCallback(async () => {

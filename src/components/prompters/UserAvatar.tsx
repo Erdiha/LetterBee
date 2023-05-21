@@ -12,11 +12,21 @@ const UserAvatar = ({ player, setShowProfile }) => {
     <View style={styles.avatar}>
       <TouchableOpacity onPress={handleProfileOpen}>
         <Avatar
-          size='small'
+          size='medium'
           rounded
           title={
             player?.name && player?.name[0]
-              ? player?.name[0] + (player?.name[1]?.toUpperCase() || '')
+              ? (
+                  <Text>
+                    <Text
+                      style={{
+                        color: colors.light,
+                        fontFamily: 'Ultra-Regular',
+                      }}>
+                      {player?.name[0].toUpperCase()}
+                    </Text>
+                  </Text>
+                ).props.children
               : 'P'
           }
           activeOpacity={0.7}

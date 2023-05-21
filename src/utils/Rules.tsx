@@ -1,4 +1,10 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
 import React from 'react';
 import { colors } from '../utils/constants';
 import Animated, {
@@ -46,10 +52,11 @@ const Rules = ({ setStart }) => {
         {handleLetterBee()}
       </View>
 
-      <View style={styles.rulesTextWrapper}>
+      <ScrollView style={styles.rulesTextWrapper}>
         {rules.map((char, index) => (
           <Animated.View
             key={index}
+            style={{ margin: 10 }}
             entering={BounceInDown.delay(
               index === rules.length - 1 ? 8000 : index * 500,
             ).duration(3000)}>
@@ -59,7 +66,7 @@ const Rules = ({ setStart }) => {
                 index === rules.length - 1
                   ? {
                       color: colors.yellow,
-                      fontSize: 20,
+                      fontSize: 18,
                       marginTop: 10,
                       textTransform: 'uppercase',
                       fontFamily: 'Ultra-Regular',
@@ -71,7 +78,7 @@ const Rules = ({ setStart }) => {
             </Text>
           </Animated.View>
         ))}
-      </View>
+      </ScrollView>
 
       <TouchableOpacity
         style={styles.buttonWrapper}
@@ -107,18 +114,19 @@ const styles = StyleSheet.create({
     fontFamily: 'Ultra-Regular',
   },
   rulesText: {
-    fontSize: 18,
+    fontSize: 15,
     lineHeight: 24,
-    marginVertical: 3,
+
     color: colors.light,
     textAlign: 'center',
     marginTop: 10,
   },
   rulesTextWrapper: {
-    padding: 20,
     backgroundColor: colors.lightDark,
     borderRadius: 10,
     elevation: 5,
+    borderWidth: 5,
+    borderColor: colors.lightDark,
   },
   buttonWrapper: {
     backgroundColor: colors.lightDark,
