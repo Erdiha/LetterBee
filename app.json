@@ -17,10 +17,11 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "",
+        "foregroundImage": "./src/assets/icons/adaptive-icon.png",
         "backgroundColor": "#EEEEEE"
       },
-      "package": "com.erdiha.letterbee"
+      "package": "com.erdiha.letterbee",
+      "versionCode": 1
     },
     "web": {
       "favicon": ""
