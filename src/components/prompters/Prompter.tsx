@@ -28,6 +28,9 @@ const Prompter = ({
   setGiveup,
   setGameOver,
   handleRoundIsOver,
+  setHint,
+  hintLetters,
+  giveUp,
 }) => {
   useEffect(() => {
     const backAction = () => {
@@ -102,7 +105,7 @@ const Prompter = ({
       <View
         style={{
           flex: 1,
-          justifyContent: 'flex-end',
+
           width: '100%',
           alignItems: 'center',
 
@@ -110,7 +113,6 @@ const Prompter = ({
         }}>
         <Text
           style={{
-            fontWeight: '800',
             fontSize: 20,
             color: colors.light,
             flex: 1 / 3,
@@ -119,6 +121,7 @@ const Prompter = ({
             padding: 5,
             position: 'absolute',
             left: -10,
+            fontFamily: 'Ultra-Regular',
           }}>
           {texts.header}
         </Text>
@@ -178,16 +181,6 @@ const Prompter = ({
       </View>
       <View style={styles.scoreWrapper}>{infoText}</View>
       <View style={styles.controlContainer}>
-        <TouchableOpacity onPress={handleExitGame}>
-          <Text
-            style={[
-              styles.buttonText,
-              { backgroundColor: colors.red, color: colors.light },
-            ]}>
-            EXIT GAME
-          </Text>
-        </TouchableOpacity>
-
         <TouchableOpacity onPress={() => handleButtonPress()}>
           <Text style={styles.buttonText}>{`${
             type === 'gameover'
@@ -196,6 +189,38 @@ const Prompter = ({
               ? 'NEXT ROUND'
               : 'GIVE UP'
           }`}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            opacity:
+              hintLetters.filter((letter: string) => letter !== '').length === 4
+                ? 0.5
+                : 1,
+          }}
+          disabled={
+            hintLetters.filter((letter: string) => letter !== '').length ===
+              4 ||
+            attempt === 5 ||
+            giveUp
+          }
+          onPress={() => {
+            setHint((prev: any) => !prev);
+            setShowInfo((prev: boolean) => !prev);
+          }}>
+          <Text style={[styles.buttonText, { backgroundColor: colors.green }]}>
+            HINT
+          </Text>
+        </TouchableOpacity>
+      </View>
+      <View>
+        <TouchableOpacity onPress={handleExitGame}>
+          <Text
+            style={[
+              styles.buttonText,
+              { backgroundColor: colors.red, color: colors.light },
+            ]}>
+            EXIT GAME
+          </Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -209,15 +234,22 @@ const styles = StyleSheet.create({
     width: '80%',
     justifyContent: 'space-evenly',
     alignItems: 'center',
-    height: '35%',
+    height: '45%',
     backgroundColor: colors.lightDark,
     bottom: '35%',
     borderRadius: 10,
-    borderColor: colors.lightDark,
+    borderColor: colors.green,
     borderWidth: 2,
     gap: 10,
+    elevation: 10,
   },
-  bodyText: { fontWeight: '500', fontSize: 18, color: colors.light, margin: 5 },
+  bodyText: {
+    fontWeight: '500',
+    fontSize: 18,
+    color: colors.light,
+    margin: 5,
+    fontFamily: 'Ultra-Regular',
+  },
   closeButton: {
     position: 'absolute',
     backgroundColor: colors.lightDark,
@@ -235,7 +267,7 @@ const styles = StyleSheet.create({
     width: '90%',
     padding: 10,
     borderRadius: 10,
-    height: '60%',
+    height: '50%',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -249,13 +281,15 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 20,
-    alignSelf: 'center',
-    borderWidth: 2,
+
+    borderWidth: 1,
     borderColor: colors.gray,
     padding: 10,
     fontWeight: '500',
     backgroundColor: colors.light,
-    borderRadius: 10,
+    borderRadius: 5,
+    textAlign: 'center',
+    fontFamily: 'Ultra-Regular',
   },
 });
 

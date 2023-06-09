@@ -62,7 +62,13 @@ function GameScreen({ navigation }: GameScreenProps) {
 
   const chooseGameType = () => {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colors.light,
+        }}>
         <Animated.View
           entering={SlideInLeft.duration(500).delay(500)}
           exiting={SlideOutDown}>

@@ -9,6 +9,7 @@ import GameScreen from './src/screens/GameScreen';
 import React, { useCallback } from 'react';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { colors } from './src/utils/constants';
 
 type RootStackParamList = {
   Home: undefined;
@@ -45,13 +46,3 @@ export default function App(): JSX.Element {
     </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontFamily: 'Ultra-Regular',
-  },
-});

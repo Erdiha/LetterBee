@@ -6,13 +6,8 @@ import InsetShadow from 'react-native-inset-shadow';
 import Animated, {
   SlideInLeft,
   FlipInEasyX,
-  FlipInEasyY,
-  ZoomInUp,
   SlideOutRight,
   ZoomInDown,
-  BounceOut,
-  SlideOutDown,
-  FadeOut,
   SlideOutLeft,
 } from 'react-native-reanimated';
 import { CheckKeyColor } from '../../utils/Helper';
@@ -22,7 +17,7 @@ const renderGuesses = ({
   allGuesses,
   correctpos,
   setFoundTheWord,
-  setGuess,
+
   keyBoardColors,
   setRoundIsOver,
 }) => {
@@ -72,8 +67,8 @@ const renderGuesses = ({
                       ...styles.shadow,
                       borderColor: letter === '?' ? colors.red : color,
                     }}
-                    elevation={5}
-                    shadowOpacity={1}
+                    elevation={10}
+                    shadowOpacity={0.1}
                     color={colors.lightDark}>
                     <Text style={styles.letter}>{letter}</Text>
                   </InsetShadow>
@@ -95,7 +90,7 @@ const styles = StyleSheet.create({
     height: 70,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 13,
+    borderWidth: 10,
   },
   headerText: {
     fontSize: 30,

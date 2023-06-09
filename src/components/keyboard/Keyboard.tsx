@@ -5,28 +5,43 @@ import {
   Text,
   StyleSheet,
   Vibration,
+  Dimensions,
 } from 'react-native';
 import { colors } from '../../utils/constants';
 import { keyRows, backspace, enter } from '../../utils/constants';
 import Animated, { BounceIn, BounceOut } from 'react-native-reanimated';
 import InsetShadow from 'react-native-inset-shadow';
 
-const Keyboard = ({
+const { width } = Dimensions.get('window');
+const buttonWidth = width < 400 ? 30 : 36;
+const buttonHeight = width < 400 ? 50 : 60;
+
+interface KeyboardProps {
+  onPress: (letter: string) => void;
+  foundTheWord: boolean;
+  keyboardColors: { [key: string]: string[] };
+  gameOver: boolean;
+  roundIsOver: boolean;
+}
+
+const Keyboard: React.FC<KeyboardProps> = ({
   onPress,
   foundTheWord,
   keyboardColors,
   gameOver,
   roundIsOver,
-}: any) => {
+}) => {
   const [activeLetter, setActiveLetter] = useState('');
 
   const enterJSX = <Text style={styles.enter}>ENTER</Text>;
+  const restJSX = (letter: string | React.ReactElement) => {
+    if (React.isValidElement(letter)) {
+      return letter;
+    }
+    return <Text style={styles.text}>{letter}</Text>;
+  };
 
-  const restJSX = (letter: string | any) => (
-    <Text style={styles.text}>{letter}</Text>
-  );
-
-  const keyColors = (key: any) => {
+  const keyColors = (key: string) => {
     if (keyboardColors[colors.green]?.includes(key)) {
       return colors.green;
     }
@@ -63,15 +78,13 @@ const Keyboard = ({
   return (
     <InsetShadow
       shadowOffset={30}
-      shadowRadius={30}
-      elevation={6}
+      shadowRadius={10}
+      elevation={10}
       shadowOpacity={1}
-      containerStyle={{
-        ...styles.container,
-      }}>
+      containerStyle={styles.container}>
       {keyRows.map((row, rowIndex) => (
         <View style={styles.row} key={rowIndex}>
-          {row.map((letter, letterIndex) => (
+          {row.map((letter: any, letterIndex) => (
             <Animated.View
               key={letterIndex}
               entering={BounceIn.delay(letterIndex * 200)}>
@@ -110,7 +123,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     justifyContent: 'center',
     alignItems: 'center',
-
     paddingHorizontal: 10,
   },
   row: {
@@ -123,27 +135,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     margin: 2,
-    width: 36,
-    height: 60,
+    width: buttonWidth,
+    height: buttonHeight,
     elevation: 7,
-    borderRadius: 6,
+    borderRadius: 7,
   },
   text: {
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: '500',
     textAlign: 'center',
     textAlignVertical: 'center',
     color: colors.lightDark2,
   },
   backspace: {
-    width: 45,
+    width: buttonWidth,
+    borderWidth: 1,
+    borderColor: colors.gray,
+    borderRadius: 5,
   },
   enterButton: {
     backgroundColor: colors.lightDark,
-    width: 78,
-    height: 60,
-
+    width: buttonWidth * 2,
+    height: buttonHeight,
     elevation: 6,
+    borderWidth: 1,
+    borderColor: colors.gray,
+    borderRadius: 5,
   },
   enter: {
     fontSize: 22,
@@ -162,10 +179,8 @@ const styles = StyleSheet.create({
     padding: 5,
     borderRadius: 5,
     elevation: 10,
-    width: 35,
-    transition: 'all 2.5s ease',
+    width: buttonWidth,
   },
-
   tooltipText: {
     fontSize: 16,
     color: colors.light,

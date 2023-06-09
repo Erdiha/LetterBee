@@ -1,16 +1,10 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  ToastAndroid,
-  TouchableOpacity,
-} from 'react-native';
+import { View, StyleSheet, ToastAndroid } from 'react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { words } from '../../utils/data';
 import { colors, keyBoardColors } from '../../utils/constants';
 import Keyboard from '../keyboard/Keyboard';
 import Prompter from '../prompters/Prompter';
-import { getDate } from '../../utils/Helper';
+import { getDate, getRandomLetter } from '../../utils/Helper';
 import { getUserData, saveUserData } from '../asyncStorage/index';
 import renderGuesses from './RenderGuesses';
 import PlayerData from '../prompters/LeaderBoard';
@@ -19,7 +13,6 @@ import { MAX_ATTEMPTS, MAX_ROUND, TOTAL_SCORE } from '../../utils/constants';
 import ModalComponent from '../prompters/ModalComponent';
 import GameBanner from './GameBanner';
 import GuessContainer from './GuessContainer';
-import { round } from 'react-native-reanimated';
 import uuid from 'react-native-uuid';
 
 const Game = ({ player, setPlayer }) => {
@@ -31,9 +24,9 @@ const Game = ({ player, setPlayer }) => {
   const [guess, setGuess] = useState(['', '', '', '', '']);
   const [row, setRow] = useState(0);
   const [col, setCol] = useState(0);
-
+  const [level, setLevel] = useState(1);
   const [foundTheWord, setFoundTheWord] = useState(false);
-  const [attempt, setAttempt] = useState(0);
+  const [attempt, setAttempt] = useState(1);
   const roundCount = useRef(1);
   const [showInfo, setShowInfo] = useState(false);
   const [info, setInfo] = useState('');
@@ -44,6 +37,15 @@ const Game = ({ player, setPlayer }) => {
   const giveUpPoints = useRef(0);
   const score = useRef(0);
   const saveData = useRef(true);
+  const [hint, setHint] = useState(false);
+  const hintPoints = useRef(0);
+  const [hintLetters, setHintLetters] = useState<Array<string>>([
+    '',
+    '',
+    '',
+    '',
+    '',
+  ]);
 
   const newWord = () => {
     const randomIndex = Math.floor(Math.random() * validWords.length);
@@ -66,6 +68,37 @@ const Game = ({ player, setPlayer }) => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (hint) {
+      hintPoints.current += 2;
+      getHintLetter();
+    }
+  }, [hint]);
+
+  const getHintLetter = () => {
+    if (!hint) {
+      return;
+    }
+
+    const { randomLetter, letterPosition } = getRandomLetter({
+      secretWord,
+      allGuesses,
+      guess,
+      hintLetters,
+    });
+
+    const updatedGuess = [...guess];
+    updatedGuess[letterPosition] = randomLetter.toUpperCase();
+    setGuess(updatedGuess);
+
+    const updatedHintLetters = [...hintLetters];
+    updatedHintLetters[letterPosition] = randomLetter;
+    setHintLetters(updatedHintLetters);
+
+    console.log('score after hint', score.current);
+    setHint(false);
+  };
+
   const handleSaveScores = () => {
     player.info.push({
       id: uuid.v4(),
@@ -87,12 +120,20 @@ const Game = ({ player, setPlayer }) => {
       }, 1000);
     } else if (giveup) {
       giveUpPoints.current += (MAX_ATTEMPTS - attempt) * 10;
-      setInfo('');
-      setRoundIsOver(true);
-      handleRoundIsOver();
-    } else if (attempt === MAX_ATTEMPTS || foundTheWord) {
+      setGuess(secretWord);
+      setTimeout(() => {
+        setInfo('');
+        setRoundIsOver(true);
+        handleRoundIsOver();
+      }, 1800);
+    } else if (
+      attempt === MAX_ATTEMPTS ||
+      foundTheWord ||
+      hintLetters.every((letter) => letter !== '')
+    ) {
       setGuess(secretWord);
       setRoundIsOver(true);
+
       if (!foundTheWord) {
         setInfo('info');
         setTimeout(() => {
@@ -101,7 +142,7 @@ const Game = ({ player, setPlayer }) => {
       }
     }
     setGiveup(false); // Reset giveup flag
-  }, [attempt, giveup, foundTheWord, secretWord]);
+  }, [attempt, giveup, foundTheWord, secretWord, hintLetters]);
 
   const handleRoundIsOver = () => {
     roundCount.current += 1;
@@ -109,6 +150,7 @@ const Game = ({ player, setPlayer }) => {
   };
 
   const resetRound = () => {
+    setHintLetters(['', '', '', '', '']);
     setAllGuesses([]);
     setGiveup(false);
     setCol(0);
@@ -135,6 +177,7 @@ const Game = ({ player, setPlayer }) => {
     }
     score.current = TOTAL_SCORE;
     giveUpPoints.current = 0;
+    hintPoints.current = 0;
     resetRound();
     saveData.current = true;
   };
@@ -150,6 +193,9 @@ const Game = ({ player, setPlayer }) => {
     setRow,
     row,
     col,
+    hint,
+    hintLetters,
+    setHintLetters,
   );
   const proptUser = () => {
     return (
@@ -165,12 +211,16 @@ const Game = ({ player, setPlayer }) => {
         setGiveup={setGiveup}
         setGameOver={setGameOver}
         handleRoundIsOver={handleRoundIsOver}
+        setHint={setHint}
+        hintLetters={hintLetters}
+        giveUp={giveup}
       />
     );
   };
   const handleModalClose = () => {
     setRoundIsOver(false);
   };
+  console.log('hint', hint);
   return (
     <View style={styles.gameWrapper}>
       <GameBanner
@@ -185,6 +235,8 @@ const Game = ({ player, setPlayer }) => {
         secretWord={secretWord}
         showInfo={showInfo}
         player={player}
+        hint={hint}
+        hintPoints={hintPoints}
       />
 
       <GuessContainer
@@ -192,6 +244,7 @@ const Game = ({ player, setPlayer }) => {
         row={row}
         roundIsOver={roundIsOver}
         foundTheWord={foundTheWord}
+        hint={hint}
       />
       {foundTheWord && roundIsOver ? (
         <View style={styles.modalContainer}>
@@ -203,6 +256,7 @@ const Game = ({ player, setPlayer }) => {
             secretWord={secretWord}
             setAllGuesses={setAllGuesses}
             onClose={handleModalClose}
+            hintPoints={hintPoints}
           />
         </View>
       ) : (
@@ -211,7 +265,6 @@ const Game = ({ player, setPlayer }) => {
           allGuesses,
           correctpos,
           setFoundTheWord,
-          setGuess,
           keyBoardColors,
           setRoundIsOver,
         })
@@ -227,7 +280,6 @@ const Game = ({ player, setPlayer }) => {
           keyboardColors={keyBoardColors}
         />
       </View>
-
       {showInfo && proptUser()}
       {showProfile && PlayerData({ player, setShowProfile, setPlayer })}
     </View>

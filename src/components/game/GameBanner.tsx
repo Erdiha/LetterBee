@@ -18,6 +18,8 @@ const GameBanner = ({
   setShowInfo,
   player,
   setShowProfile,
+  hint,
+  hintPoints,
 }) => {
   const handleInfoToggle = () => {
     setShowInfo(!showInfo);
@@ -32,8 +34,19 @@ const GameBanner = ({
         secretWord,
         score,
         giveUpPoints,
+        hint,
+        hintPoints,
       ),
-    [allGuesses, roundCount, playerScore, secretWord, score, giveUpPoints],
+    [
+      allGuesses,
+      roundCount,
+      playerScore,
+      secretWord,
+      score.current,
+      giveUpPoints,
+      hint,
+      hintPoints,
+    ],
   );
 
   return useMemo(
@@ -48,12 +61,25 @@ const GameBanner = ({
           </Text>
         </View>
         <TouchableOpacity style={styles.infoWrapper} onPress={handleInfoToggle}>
-          <AntDesign size={40} name='infocirlce' color={colors.red} />
+          <AntDesign
+            style={{ fontFamily: 'Ultra-Regular' }}
+            size={40}
+            name='infocirlce'
+            color={colors.gray}
+          />
         </TouchableOpacity>
         <UserAvatar player={player} setShowProfile={setShowProfile} />
       </View>
     ),
-    [scoreDisplay, handleInfoToggle, showInfo, player, setShowProfile],
+    [
+      scoreDisplay,
+      handleInfoToggle,
+      showInfo,
+      player,
+      setShowProfile,
+      hint,
+      score.current,
+    ],
   );
 };
 
@@ -68,7 +94,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.lightDark,
   },
   headerText: {
-    fontSize: 25,
+    fontSize: 20,
     fontFamily: 'Ultra-Regular',
     color: colors.lightDark,
     textAlign: 'center',
@@ -94,7 +120,7 @@ const styles = StyleSheet.create({
   scoreWrapper: {
     fontFamily: 'Ultra-Regular',
     color: colors.red,
-    fontSize: 23,
+    fontSize: 20,
     textAlign: 'center',
     alignSelf: 'center',
   },

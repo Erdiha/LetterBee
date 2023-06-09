@@ -4,7 +4,34 @@ import { PlayerScore } from '../screens/types';
 //score calculation
 export const POINTS_PER_GRAY_LETTER = 2;
 export const POINTS_PER_YELLOW_LETTER = 0.5;
-import { Audio } from 'expo-av';
+
+import { ToastAndroid } from 'react-native';
+
+export function getRandomLetter({
+  secretWord,
+  allGuesses,
+  guess,
+  hintLetters,
+}) {
+  console.log('scrt', secretWord);
+
+  let randomLetter = '';
+  let letterPosition = 0;
+
+  do {
+    console.log('a');
+    letterPosition = Math.floor(Math.random() * secretWord.length);
+    randomLetter = secretWord[letterPosition].toUpperCase(); // Convert to uppercase
+    console.log('length', secretWord.length, randomLetter);
+    console.log('allguess flat', allGuesses.flat());
+  } while (
+    allGuesses.flat().includes(randomLetter) ||
+    guess.includes(randomLetter) ||
+    hintLetters.filter((letter) => letter === '').length < 1
+  );
+
+  return { randomLetter, letterPosition };
+}
 
 export const CheckKeyColor = ({
   letter,
@@ -36,9 +63,8 @@ export const validateGuess = async ({ row }) => {
       `https://api.dictionaryapi.dev/api/v2/entries/en/${w}`,
     );
     data = await response.json();
-    console.log(data);
   } catch (err) {
-    console.warn(err);
+    ToastAndroid.show('Invalid Word!', ToastAndroid.SHORT);
   }
   return data;
 };
@@ -95,20 +121,20 @@ export function handleScoreDisplay(
   roundCount: React.MutableRefObject<number>,
   playerScore: React.MutableRefObject<{ 1: number; 2: number; 3: number }>,
   secretWord: any,
-
   score: React.MutableRefObject<number>,
-
   giveUpPoints: React.MutableRefObject<number>,
+  hint: boolean,
+  hintPoints: React.MutableRefObject<number>,
 ) {
   return () => {
     playerScore.current[roundCount.current] = calculateScore({
       secretWord,
-
       allGuesses,
     });
     let totalScore = getScoreSum(playerScore);
 
-    score.current = TOTAL_SCORE - totalScore - giveUpPoints.current;
+    score.current =
+      TOTAL_SCORE - totalScore - giveUpPoints.current - hintPoints.current;
 
     return score.current;
   };

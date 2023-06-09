@@ -12,9 +12,13 @@ export default function KeyPressRender(
   setRow: React.Dispatch<React.SetStateAction<number>>,
   row: number,
   col: number,
+  hint: any,
+  hintLetters: string[],
+  setHintLetters: any,
 ) {
   return (letter: string) => {
     if (letter === 'ENTER') {
+      console.log('only guess', guess);
       if (guess.includes('')) {
         return;
       }
@@ -27,8 +31,10 @@ export default function KeyPressRender(
           setAllGuesses([...allGuesses, ['?', '?', '?', '?', '?']]);
         }
       });
-
+      console.log('hint letters in keypress', hintLetters);
       setGuess(['', '', '', '', '']);
+      setGuess([...hintLetters]);
+      console.log('all guess', allGuesses);
       setRow(0);
       setAttempt(attempt + 1);
     } else if (letter === 'backspace') {
@@ -49,8 +55,10 @@ export default function KeyPressRender(
       if (row === 5) {
         return;
       } else {
-        guess[row] = letter;
-        setGuess(guess);
+        if (guess[row] === '') {
+          guess[row] = letter;
+          setGuess([...guess]);
+        }
         setRow(row + 1);
       }
     }

@@ -1,20 +1,21 @@
-import { View, Text, Animated, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import React from 'react';
 
 import InsetShadow from 'react-native-inset-shadow';
 import { colors } from '../../utils/constants';
+import Animated, { FlipInEasyX } from 'react-native-reanimated';
 
-const GuessContainer = ({ guess, row, roundIsOver, foundTheWord }) => {
+const GuessContainer = ({ guess, row, roundIsOver, foundTheWord, hint }) => {
   return (
-    <View style={styles.guessRow}>
+    <Animated.View entering={FlipInEasyX} style={styles.guessRow}>
       {guess?.map((letter: string, index: number) => {
         const isCurrentRow = row === index;
         const scale = isCurrentRow && !foundTheWord ? 1 : 0.85;
 
         return (
           <Animated.View key={index} style={styles.guessCell}>
-            <InsetShadow
-              containerStyle={{
+            <View
+              style={{
                 ...styles.shadow,
                 transform: [{ scale: roundIsOver ? 1 : scale }],
                 borderColor: isCurrentRow ? colors.red : colors.lightDark,
@@ -27,18 +28,17 @@ const GuessContainer = ({ guess, row, roundIsOver, foundTheWord }) => {
                   : isCurrentRow
                   ? colors.light
                   : colors.light,
-              }}
-              shadowColor={isCurrentRow ? 'green' : 'black'}
-              elevation={6}
-              shadowOpacity={1}>
-              <Text style={[styles.letter, { color: colors.lightDark2 }]}>
+              }}>
+              <Animated.Text
+                entering={FlipInEasyX}
+                style={[styles.letter, { color: colors.lightDark2 }]}>
                 {letter.toUpperCase()}
-              </Text>
-            </InsetShadow>
+              </Animated.Text>
+            </View>
           </Animated.View>
         );
       })}
-    </View>
+    </Animated.View>
   );
 };
 const styles = StyleSheet.create({

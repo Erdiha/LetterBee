@@ -178,11 +178,12 @@ const styles = StyleSheet.create({
     borderColor: colors.lightDark,
     borderWidth: 4,
     padding: 10,
-    backgroundColor: colors.light,
+    backgroundColor: colors.red,
     marginVertical: 20,
     width: '95%',
     flex: 1,
     height: '100%',
+    justifyContent: 'space-evenly',
   },
   title: {
     fontSize: 30,
@@ -195,11 +196,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     letterSpacing: 1,
     textAlign: 'center',
+    marginBottom: 10,
   },
   scoresContainer: {
     backgroundColor: colors.light,
     padding: 10,
     borderRadius: 10,
+    elevation: 5,
   },
   scoreItem: {
     flexDirection: 'row',

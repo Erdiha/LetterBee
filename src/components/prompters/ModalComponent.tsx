@@ -24,10 +24,12 @@ function ModalComponent({
   playerScore,
   roundCount,
   onClose,
+  hintPoints,
 }) {
   const word = 'CONGRATS'.toUpperCase().split('');
 
-  const scoreRemaining = ROUND_SCORE - playerScore.current[roundCount.current];
+  const scoreRemaining =
+    ROUND_SCORE - playerScore.current[roundCount.current] - hintPoints.current;
 
   const closeModal = () => {
     setAllGuesses([]);
