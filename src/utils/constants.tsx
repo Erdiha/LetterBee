@@ -12,7 +12,7 @@ export const colors = {
   lightBlue: '#C4DFDF',
 };
 export const backspace = (
-  <Ionicons name='md-backspace' size={30} color={colors.red} />
+  <Ionicons name='backspace' size={30} color={colors.red} />
 );
 export const enter = 'ENTER';
 export const keyRows = [

@@ -7,24 +7,23 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from 'react-native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../utils/constants';
-import Animation, {
+import Animated, {
   BounceInLeft,
   BounceInRight,
   SlideInUp,
 } from 'react-native-reanimated';
 import { RootStackParamList } from './types';
 import { title, bgColor } from '../utils/constants';
-import Animated from 'react-native-reanimated';
 
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
+type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 function HomeScreen({ navigation }: { navigation: HomeScreenNavigationProp }) {
   function renderTitle() {
     const red = title.map((letter: string, index: number) => {
       return (
-        <Animation.View
+        <Animated.View
           entering={
             index % 2 === 0
               ? BounceInRight.delay(index * 300).duration(3000)
@@ -55,11 +54,11 @@ function HomeScreen({ navigation }: { navigation: HomeScreenNavigationProp }) {
             style={{
               color: colors.light,
               fontSize: 45,
-              fontFamily: 'Ultra-Regular',
+              fontWeight: 'bold',
             }}>
             {letter}
           </Text>
-        </Animation.View>
+        </Animated.View>
       );
     });
 
@@ -91,7 +90,7 @@ function HomeScreen({ navigation }: { navigation: HomeScreenNavigationProp }) {
               color: 'white',
               fontSize: 30,
               textAlign: 'center',
-              fontFamily: 'Ultra-Regular',
+              fontWeight: 'bold',
             }}>
             PLAY
           </Text>
@@ -108,7 +107,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     backgroundColor: colors.light,
-
     alignItems: 'center',
   },
   container: {

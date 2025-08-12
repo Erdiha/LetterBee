@@ -1,4 +1,4 @@
-import { StackNavigationProp } from '@react-navigation/stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import {
   View,
@@ -22,7 +22,7 @@ import { colors } from '../utils/constants';
 import Game from '../components/game/Game';
 import Rules from '../utils/Rules';
 
-type GameScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Game'>;
+type GameScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Game'>;
 
 interface GameScreenProps {
   navigation: GameScreenNavigationProp;

@@ -157,7 +157,6 @@ const styles = StyleSheet.create({
   rankingIcon: {
     position: 'absolute',
     right: 5,
-    verticalAlign: 'center',
     elevation: 5,
   },
   container: {
